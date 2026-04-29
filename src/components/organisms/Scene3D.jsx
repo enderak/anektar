@@ -204,7 +204,7 @@ export const Scene3D = ({
   const maxTextWidth = Math.max(textSizeMain[0], textSizeSub[0]);
   
   const iconRealSize = hasIcon ? (letterSize * iconScale) : 0;
-  const iconTotalWidth = hasIcon ? (iconRealSize + 4.0) : 0;
+  const iconTotalWidth = hasIcon ? (iconRealSize + 8.0) : 0; // Boşluğu 4'ten 8'e çıkardım
   
   let baseW = maxTextWidth + pLeft + pRight + iconTotalWidth;
   
@@ -266,12 +266,12 @@ export const Scene3D = ({
     }
   }, [selectedShape, baseW, baseD, isLeft, holeX, holeZ, holeR]);
 
-  // Icon pozisyon hesabı (declarative)
   const iconX = useMemo(() => {
     if (!hasIcon) return 0;
     const textShiftDir = iconPosition === 'left' ? 1 : -1;
     const iconDir = iconPosition === 'left' ? -1 : 1;
-    return baseCenterX + iconDir * (maxTextWidth / 2 + iconRealSize * 0.6) + textShiftDir * (iconTotalWidth / 2);
+    // iconRealSize * 0.75 yaparak yazıdan biraz daha uzaklaştırdım (önceden 0.6 idi)
+    return baseCenterX + iconDir * (maxTextWidth / 2 + iconRealSize * 0.75) + textShiftDir * (iconTotalWidth / 2);
   }, [hasIcon, iconPosition, baseCenterX, maxTextWidth, iconRealSize, iconTotalWidth]);
 
   const processTextGeometry = (self, setSizeFunc, yOffset) => {

@@ -65,15 +65,16 @@ export function createHeartShape(size = 24) {
   const s = size / 2;
   
   const shape = new THREE.Shape();
-  shape.moveTo(x, y - s * 0.5);
+  // Three.js koordinat sistemine göre (Y yukarı pozitif) düzeltme
+  shape.moveTo(x, y + s * 0.5);
   
   // Sol üst kavis
-  shape.bezierCurveTo(x, y - s * 0.9, x - s, y - s * 0.9, x - s, y - s * 0.3);
-  shape.bezierCurveTo(x - s, y + s * 0.3, x, y + s * 0.5, x, y + s);
+  shape.bezierCurveTo(x, y + s * 0.9, x - s, y + s * 0.9, x - s, y + s * 0.3);
+  shape.bezierCurveTo(x - s, y - s * 0.3, x, y - s * 0.5, x, y - s);
   
   // Sağ üst kavis (simetrik)
-  shape.bezierCurveTo(x, y + s * 0.5, x + s, y + s * 0.3, x + s, y - s * 0.3);
-  shape.bezierCurveTo(x + s, y - s * 0.9, x, y - s * 0.9, x, y - s * 0.5);
+  shape.bezierCurveTo(x, y - s * 0.5, x + s, y - s * 0.3, x + s, y + s * 0.3);
+  shape.bezierCurveTo(x + s, y + s * 0.9, x, y + s * 0.9, x, y + s * 0.5);
 
   return shape;
 }
