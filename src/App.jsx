@@ -9,6 +9,7 @@ import { useTranslation } from 'react-i18next';
 const App = () => {
   const [text, setText] = useState('YM2KY');
   const [subText, setSubText] = useState(''); // Alt Metin
+  const [isItalic, setIsItalic] = useState(false); // İtalik Yazı
   const [textDepth, setTextDepth] = useState(2.0); // Yazı kalınlığı (mm)
   const [materialColor, setMaterialColor] = useState('#22C55E'); // Yazı Rengi
   const [baseColor, setBaseColor] = useState('#0F172A'); // Taban Rengi
@@ -81,6 +82,8 @@ const App = () => {
             setText={setText}
             subText={subText}
             setSubText={setSubText}
+            isItalic={isItalic}
+            setIsItalic={setIsItalic}
             textDepth={textDepth}
             setTextDepth={setTextDepth}
             materialColor={materialColor}
@@ -137,6 +140,7 @@ const App = () => {
               <Scene3D 
                 text={text} 
                 subText={subText}
+                isItalic={isItalic}
                 textDepth={textDepth}
                 groupRef={groupRef}
                 materialColor={materialColor}

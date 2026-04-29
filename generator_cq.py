@@ -23,6 +23,7 @@ parser.add_argument("--sub_text",      type=str,   default="",         help="Alt
 parser.add_argument("--font_size",     type=float, default=30.0,       help="Temel yazı boyutu (mm)")
 parser.add_argument("--text_scale",    type=float, default=100.0,      help="Yazı boyutu yüzdesi (%)")
 parser.add_argument("--text_depth",    type=float, default=2.0,        help="Yazı derinliği (mm)")
+parser.add_argument("--italic",        action="store_true",            help="İtalik yazı tipi kullan")
 parser.add_argument("--base_shape",    type=str,   default="rectangle",help="Taban şekli: rectangle veya teardrop")
 parser.add_argument("--hole_position", type=str,   default="center_left", help="Delik konumu")
 parser.add_argument("--base_height",   type=float, default=3.0,        help="Taban plakası yüksekliği (mm)")
@@ -40,12 +41,16 @@ alt_metin       = args.sub_text
 base_font_size  = args.font_size
 text_scale      = args.text_scale
 text_depth      = args.text_depth
+is_italic       = args.italic
 base_shape_type = args.base_shape
 hole_pos        = args.hole_position
 taban_yukseklik = args.base_height
 pah_miktari     = args.chamfer
 font_adi        = args.font
 output_file     = args.output
+
+if is_italic and font_adi == "optimer_bold":
+    font_adi = "optimer_italic"
 
 scale_ratio = text_scale / 100.0
 yazi_boyutu = base_font_size * scale_ratio

@@ -52,9 +52,9 @@ const createTeardropShape = (width, depth, isLeft, holeConfig) => {
 
   // Saat yönünün tersine (CCW) çizim:
   shape.absarc(cxRight, 0, rRight, -Math.PI/2 + angleRight, Math.PI/2 - angleRight, false);
-  shape.lineTo(cxLeft + rLeft * Math.sin(angleLeft), rLeft * Math.cos(angleLeft));
+  shape.lineTo(cxLeft - rLeft * Math.sin(angleLeft), rLeft * Math.cos(angleLeft));
   shape.absarc(cxLeft, 0, rLeft, Math.PI/2 + angleLeft, Math.PI*1.5 - angleLeft, false);
-  shape.lineTo(cxRight + rRight * Math.sin(-angleRight), -rRight * Math.cos(-angleRight));
+  shape.lineTo(cxRight + rRight * Math.sin(angleRight), -rRight * Math.cos(angleRight));
 
   // Delik (Hole)
   if (holeConfig) {
@@ -69,6 +69,7 @@ const createTeardropShape = (width, depth, isLeft, holeConfig) => {
 export const Scene3D = ({
   text,
   subText,
+  isItalic,
   textDepth,
   groupRef,
   materialColor,
@@ -212,8 +213,8 @@ export const Scene3D = ({
           {/* ANA METİN */}
           <Text3D
             name="TextMain"
-            key={`main-${text}-${textDepth}-${baseHeight}-${scaleRatio}-${hasSubText}-optimer`}
-            font="/fonts/optimer_bold.typeface.json"
+            key={`main-${text}-${textDepth}-${baseHeight}-${scaleRatio}-${hasSubText}-${isItalic}-optimer`}
+            font={isItalic ? "/fonts/optimer_italic.typeface.json" : "/fonts/optimer_bold.typeface.json"}
             size={letterSize}
             height={textDepth} // textDepth kullanılıyor
             curveSegments={16}
@@ -228,8 +229,8 @@ export const Scene3D = ({
           {hasSubText && (
             <Text3D
               name="TextSub"
-              key={`sub-${subText}-${textDepth}-${baseHeight}-${scaleRatio}-optimer`}
-              font="/fonts/optimer_bold.typeface.json"
+              key={`sub-${subText}-${textDepth}-${baseHeight}-${scaleRatio}-${isItalic}-optimer`}
+              font={isItalic ? "/fonts/optimer_italic.typeface.json" : "/fonts/optimer_bold.typeface.json"}
               size={letterSize}
               height={textDepth} // textDepth kullanılıyor
               curveSegments={16}

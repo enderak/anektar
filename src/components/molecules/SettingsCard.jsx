@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 export const SettingsCard = ({ 
   text, setText, 
   subText, setSubText,
+  isItalic, setIsItalic,
   textDepth, setTextDepth,
   materialColor, setMaterialColor,
   baseColor, setBaseColor,
@@ -96,6 +97,29 @@ export const SettingsCard = ({
             onChange={(e) => setTextDepth(parseFloat(e.target.value))}
             className="w-full h-1 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-emerald-600 outline-none"
           />
+        </div>
+
+        {/* İtalik (Dönüştürme) */}
+        <div className="flex flex-col gap-2">
+          <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">{t('transform')}</label>
+          <div className="bg-slate-100/80 p-1 rounded-xl flex items-center h-11 w-full relative">
+            <button 
+              onClick={() => setIsItalic(false)}
+              className={`z-10 flex-1 text-[11px] font-bold tracking-wider rounded-lg h-full transition-colors ${
+                !isItalic ? 'bg-white shadow-sm text-slate-800' : 'text-slate-400 hover:text-slate-600'
+              }`}
+            >
+              {t('normal_text') || 'NORMAL'}
+            </button>
+            <button 
+              onClick={() => setIsItalic(true)}
+              className={`z-10 flex-1 text-[11px] font-bold tracking-wider rounded-lg h-full transition-colors italic ${
+                isItalic ? 'bg-white shadow-sm text-slate-800' : 'text-slate-400 hover:text-slate-600'
+              }`}
+            >
+              {t('italic')}
+            </button>
+          </div>
         </div>
       </div>
 
