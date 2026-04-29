@@ -178,9 +178,9 @@ export const Scene3D = ({
   }, [fontFamily]);
 
   // Programatik icon shape oluştur
+  const iconScale = 0.65; // İkon yazıdan biraz küçük
   const iconShape = useMemo(() => {
     if (iconType === 'none') return null;
-    // Özel SVG desteği şimdilik devre dışı - programatik şekiller kullanılıyor
     return createIconShape(iconType, letterSize);
   }, [iconType, letterSize]);
 
@@ -203,7 +203,8 @@ export const Scene3D = ({
   // Taban genişliği için en uzun metni baz al
   const maxTextWidth = Math.max(textSizeMain[0], textSizeSub[0]);
   
-  const iconTotalWidth = hasIcon ? (letterSize + 5.0) : 0;
+  const iconRealSize = hasIcon ? (letterSize * iconScale) : 0;
+  const iconTotalWidth = hasIcon ? (iconRealSize + 4.0) : 0;
   
   let baseW = maxTextWidth + pLeft + pRight + iconTotalWidth;
   
@@ -265,13 +266,13 @@ export const Scene3D = ({
     }
   }, [selectedShape, baseW, baseD, isLeft, holeX, holeZ, holeR]);
 
-  // Icon pozisyon hesabı (declarative - onUpdate yerine position prop)
+  // Icon pozisyon hesabı (declarative)
   const iconX = useMemo(() => {
     if (!hasIcon) return 0;
     const textShiftDir = iconPosition === 'left' ? 1 : -1;
     const iconDir = iconPosition === 'left' ? -1 : 1;
-    return baseCenterX + iconDir * (maxTextWidth / 2 + letterSize * 0.5) + textShiftDir * (iconTotalWidth / 2);
-  }, [hasIcon, iconPosition, baseCenterX, maxTextWidth, letterSize, iconTotalWidth]);
+    return baseCenterX + iconDir * (maxTextWidth / 2 + iconRealSize * 0.6) + textShiftDir * (iconTotalWidth / 2);
+  }, [hasIcon, iconPosition, baseCenterX, maxTextWidth, iconRealSize, iconTotalWidth]);
 
   const processTextGeometry = (self, setSizeFunc, yOffset) => {
     if (!self.geometry.userData.morphed) {
@@ -367,6 +368,7 @@ export const Scene3D = ({
               name="TextIcon"
               position={[iconX, baseH, 0]}
               rotation={[-Math.PI / 2, 0, 0]}
+              scale={[iconScale, iconScale, 1]}
             >
               <extrudeGeometry args={[iconShape, { depth: textDepth, bevelEnabled: false }]} />
               <meshStandardMaterial color={materialColor} roughness={0.4} metalness={0.1} />
