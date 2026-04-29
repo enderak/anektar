@@ -265,35 +265,13 @@ export const Scene3D = ({
     }
   }, [selectedShape, baseW, baseD, isLeft, holeX, holeZ, holeR]);
 
-  const processIconGeometry = (self) => {
-    if (!self.geometry.userData.morphed) {
-      self.geometry.computeBoundingBox();
-      const bbox = self.geometry.boundingBox;
-      
-      if (!bbox || bbox.min.x === Infinity || isNaN(bbox.min.x)) return;
-      
-      // Center the shape
-      self.geometry.translate(
-        -(bbox.max.x + bbox.min.x) / 2,
-        -(bbox.max.y + bbox.min.y) / 2,
-        0
-      );
-      
-      if (isItalic) {
-        self.geometry.applyMatrix4(shearMatrix);
-      }
-
-      self.geometry.rotateX(-Math.PI / 2);
-
-      // Move to correct X position
-      const textShiftX = iconPosition === 'left' ? iconTotalWidth / 2 : -iconTotalWidth / 2;
-      const iconShiftX = iconPosition === 'left' ? -(maxTextWidth / 2 + letterSize * 0.5) : (maxTextWidth / 2 + letterSize * 0.5);
-      self.geometry.translate(baseCenterX + iconShiftX + textShiftX, baseH, 0);
-      
-      self.geometry.computeVertexNormals();
-      self.geometry.userData.morphed = true;
-    }
-  };
+  // Icon pozisyon hesabı (declarative - onUpdate yerine position prop)
+  const iconX = useMemo(() => {
+    if (!hasIcon) return 0;
+    const textShiftDir = iconPosition === 'left' ? 1 : -1;
+    const iconDir = iconPosition === 'left' ? -1 : 1;
+    return baseCenterX + iconDir * (maxTextWidth / 2 + letterSize * 0.5) + textShiftDir * (iconTotalWidth / 2);
+  }, [hasIcon, iconPosition, baseCenterX, maxTextWidth, letterSize, iconTotalWidth]);
 
   const processTextGeometry = (self, setSizeFunc, yOffset) => {
     if (!self.geometry.userData.morphed) {
@@ -387,7 +365,8 @@ export const Scene3D = ({
             <mesh 
               key={`icon-${iconType}-${textDepth}-${baseHeight}-${scaleRatio}-${isItalic}-${iconPosition}-${letterSize}`}
               name="TextIcon"
-              onUpdate={processIconGeometry}
+              position={[iconX, baseH, 0]}
+              rotation={[-Math.PI / 2, 0, 0]}
             >
               <extrudeGeometry args={[iconShape, { depth: textDepth, bevelEnabled: false }]} />
               <meshStandardMaterial color={materialColor} roughness={0.4} metalness={0.1} />
