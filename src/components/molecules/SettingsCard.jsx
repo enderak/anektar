@@ -10,10 +10,9 @@ export const SettingsCard = ({
   materialColor, setMaterialColor,
   baseColor, setBaseColor,
   plateThickness, setPlateThickness,
-  tiltAngle, setTiltAngle,
+  holePosition, setHolePosition,
   textOffset, setTextOffset,
   autoCenter, setAutoCenter,
-  arcRadius, setArcRadius,
   baseHeight, setBaseHeight,
   targetWidth, setTargetWidth,
   onExport 
@@ -163,34 +162,31 @@ export const SettingsCard = ({
       <div className="flex flex-col gap-4 mt-2">
 
 
-        {/* Eğim Açısı */}
-        <div className="flex flex-col gap-3">
-          <div className="flex justify-between items-center text-[10px] font-bold text-slate-500">
-            <span>{t('tilt_angle')}</span>
-            <span>{tiltAngle}°</span>
+        {/* Delik Konumu */}
+        <div className="flex flex-col gap-2">
+          <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">{t('hole_position')}</label>
+          <div className="grid grid-cols-2 gap-2">
+            {[
+              { id: 'top_left', label: 'hole_top_left' },
+              { id: 'center_left', label: 'hole_center_left' },
+              { id: 'bottom_left', label: 'hole_bottom_left' },
+              { id: 'top_right', label: 'hole_top_right' },
+              { id: 'center_right', label: 'hole_center_right' },
+              { id: 'bottom_right', label: 'hole_bottom_right' }
+            ].map(pos => (
+              <button
+                key={pos.id}
+                onClick={() => setHolePosition(pos.id)}
+                className={`py-2 px-3 text-[11px] font-bold rounded-xl transition-all border ${
+                  holePosition === pos.id 
+                    ? 'bg-emerald-50 text-emerald-700 border-emerald-200 shadow-sm' 
+                    : 'bg-white text-slate-500 border-slate-200 hover:border-slate-300 hover:bg-slate-50'
+                }`}
+              >
+                {t(pos.label)}
+              </button>
+            ))}
           </div>
-          <input 
-            type="range" 
-            min="0" max="45" step="1"
-            value={tiltAngle}
-            onChange={(e) => setTiltAngle(parseInt(e.target.value))}
-            className="w-full h-1 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-emerald-600 outline-none"
-          />
-        </div>
-
-        {/* Kavis Yarıçapı (R) */}
-        <div className="flex flex-col gap-3">
-          <div className="flex justify-between items-center text-[10px] font-bold text-slate-500">
-            <span>{t('arc_radius')}</span>
-            <span>{arcRadius}mm</span>
-          </div>
-          <input 
-            type="range" 
-            min="10" max="200" step="5"
-            value={arcRadius}
-            onChange={(e) => setArcRadius(parseInt(e.target.value))}
-            className="w-full h-1 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-emerald-600 outline-none"
-          />
         </div>
 
         {/* Taban Yüksekliği (Base Height) */}

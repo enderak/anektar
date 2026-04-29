@@ -12,12 +12,11 @@ const App = () => {
   const [isThicknessThick, setIsThicknessThick] = useState(true);
   const [materialColor, setMaterialColor] = useState('#22C55E'); // Yazı Rengi
   const [baseColor, setBaseColor] = useState('#0F172A'); // Taban Rengi
-  const [tiltAngle, setTiltAngle] = useState(34);
-  const [targetWidth, setTargetWidth] = useState(200); // 20 cm
+  const [holePosition, setHolePosition] = useState('top_left'); // Delik Konumu
+  const [targetWidth, setTargetWidth] = useState(100); // 10 cm (anahtarlık için varsayılan)
   const [textOffset, setTextOffset] = useState(0);
   const [autoCenter, setAutoCenter] = useState(true);
-  const [arcRadius, setArcRadius] = useState(30);
-  const [baseHeight, setBaseHeight] = useState(7.5);
+  const [baseHeight, setBaseHeight] = useState(3.0); // İnce taban (anahtarlık)
   const groupRef = useRef();
   const { t, i18n } = useTranslation();
 
@@ -86,14 +85,12 @@ const App = () => {
             setMaterialColor={setMaterialColor}
             baseColor={baseColor}
             setBaseColor={setBaseColor}
-            tiltAngle={tiltAngle}
-            setTiltAngle={setTiltAngle}
+            holePosition={holePosition}
+            setHolePosition={setHolePosition}
             textOffset={textOffset}
             setTextOffset={setTextOffset}
             autoCenter={autoCenter}
             setAutoCenter={setAutoCenter}
-            arcRadius={arcRadius}
-            setArcRadius={setArcRadius}
             baseHeight={baseHeight}
             setBaseHeight={setBaseHeight}
             targetWidth={targetWidth}
@@ -106,7 +103,7 @@ const App = () => {
             <div className="bg-[#FEF5E7] p-4 rounded-xl shadow-sm border border-orange-100/50 flex gap-3 text-sm text-amber-800/80">
               <Lightbulb size={20} className="text-amber-700 shrink-0 mt-0.5" />
               <p className="leading-snug text-[13px]">
-                {t('tip', { angle: tiltAngle })}
+                {t('tip')}
               </p>
             </div>
             
@@ -170,10 +167,9 @@ const App = () => {
                 isThicknessThick={isThicknessThick}
                 materialColor={materialColor}
                 baseColor={baseColor}
-                tiltAngle={tiltAngle}
+                holePosition={holePosition}
                 textOffset={textOffset}
                 autoCenter={autoCenter}
-                arcRadius={arcRadius}
                 baseHeight={baseHeight}
                 targetWidth={targetWidth}
               />
