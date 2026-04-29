@@ -23,7 +23,50 @@ const createRoundedRectShape = (width, depth, radius, holeConfig) => {
   // Delik (Hole) ekleme
   if (holeConfig) {
     const holePath = new THREE.Path();
-    // Saat yönünde çizilmeli ki Shape içinde delik (subtraction) olsun
+    holePath.absarc(holeConfig.x, holeConfig.y, holeConfig.r, 0, Math.PI * 2, true);
+    shape.holes.push(holePath);
+  }
+  
+  return shape;
+};
+
+// Damla (Teardrop) şablonu
+const createTeardropShape = (width, depth, isLeft, holeConfig) => {
+  const shape = new THREE.Shape();
+  
+  // R_main (Geniş uç) ve R_small (Dar uç/Delik ucu)
+  const rMain = depth / 2;
+  const rSmall = holeConfig ? holeConfig.r + 4.5 : depth / 3;
+
+  const cxLeft = -width / 2 + (isLeft ? rSmall : rMain);
+  const cxRight = width / 2 - (isLeft ? rMain : rSmall);
+
+  const rLeft = isLeft ? rSmall : rMain;
+  const rRight = isLeft ? rMain : rSmall;
+
+  const d = cxRight - cxLeft;
+  
+  // Teğet açıları
+  const theta = Math.asin((rMain - rSmall) / d); // Daralma açısı
+  const angleLeft = isLeft ? theta : -theta;
+  const angleRight = isLeft ? theta : -theta;
+
+  // Saat yönünün tersine (CCW) çizim:
+  // Sağ alt -> Sağ üst yay
+  shape.absarc(cxRight, 0, rRight, -Math.PI/2 + angleRight, Math.PI/2 - angleRight, false);
+  
+  // Üst teğet çizgi (Sağ üstten Sol üste)
+  shape.lineTo(cxLeft + rLeft * Math.sin(angleLeft), rLeft * Math.cos(angleLeft));
+
+  // Sol üst -> Sol alt yay
+  shape.absarc(cxLeft, 0, rLeft, Math.PI/2 + angleLeft, Math.PI*1.5 - angleLeft, false);
+
+  // Alt teğet çizgi (Sol alttan Sağ alta)
+  shape.lineTo(cxRight + rRight * Math.sin(-angleRight), -rRight * Math.cos(-angleRight));
+
+  // Delik (Hole)
+  if (holeConfig) {
+    const holePath = new THREE.Path();
     holePath.absarc(holeConfig.x, holeConfig.y, holeConfig.r, 0, Math.PI * 2, true);
     shape.holes.push(holePath);
   }
@@ -38,6 +81,7 @@ export const Scene3D = ({
   isThicknessThick,
   materialColor,
   baseColor,
+  baseShape: selectedShape,
   holePosition,
   textOffset,
   autoCenter,
@@ -59,8 +103,13 @@ export const Scene3D = ({
   const pTop = 10.0;
   const pBottom = 10.0;
 
-  const baseW = textSize[0] + pLeft + pRight;
-  const baseD = textSize[1] + pTop + pBottom;
+  let baseW = textSize[0] + pLeft + pRight;
+  let baseD = textSize[1] + pTop + pBottom;
+
+  // Damla şeklinde uçlar yuvarlak olduğu için yazının taşmaması adına ekstra genişlik
+  if (selectedShape === 'teardrop') {
+    baseW += 10.0;
+  }
 
   // Tabanın merkezi
   const baseCenterX = (pRight - pLeft) / 2;
@@ -68,7 +117,7 @@ export const Scene3D = ({
   const zCenterOffset = autoCenter ? 0 : textOffset;
 
   // Delik koordinatları (Taban merkezine göre lokal)
-  const holeR = 3.5; // 3.5mm delik yarıçapı
+  const holeR = 3.5; 
   let holeX = 0;
   let holeZ = 0;
 
@@ -86,20 +135,29 @@ export const Scene3D = ({
     holeZ = 0; // center
   }
 
+  // Damla şeklindeyken deliği her zaman ortalayalım (daha estetik olur)
+  if (selectedShape === 'teardrop') {
+    holeZ = 0;
+  }
+
   const innerScale = targetWidth ? (targetWidth / baseW) : 1;
   const scaledCenterZ = baseCenterZ * innerScale;
   const scaledBaseW = baseW * innerScale;
   const scaledBaseD = baseD * innerScale;
 
-  // Dümdüz tabanlı kusursuz plaka profili (delikli)
+  // Taban şekli seçimi
   const baseShape = useMemo(() => {
-    return createRoundedRectShape(
-      baseW, 
-      baseD, 
-      Math.min(5, baseW/2, baseD/2), 
-      { x: holeX, y: holeZ, r: holeR }
-    );
-  }, [baseW, baseD, holeX, holeZ, holeR]);
+    if (selectedShape === 'teardrop') {
+      return createTeardropShape(baseW, baseD, isLeft, { x: holeX, y: holeZ, r: holeR });
+    } else {
+      return createRoundedRectShape(
+        baseW, 
+        baseD, 
+        Math.min(5, baseW/2, baseD/2), 
+        { x: holeX, y: holeZ, r: holeR }
+      );
+    }
+  }, [selectedShape, baseW, baseD, isLeft, holeX, holeZ, holeR]);
 
   return (
     <>
@@ -115,10 +173,9 @@ export const Scene3D = ({
       <pointLight position={[10, 10, 10]} intensity={1.2} castShadow />
 
       <group scale={[SCALE, SCALE, SCALE]} position={[0, -0.5, zCenterOffset * SCALE]}>
-
         <group ref={groupRef} scale={[innerScale, innerScale, innerScale]}>
 
-          {/* DÜZ ANA HARF (FLAT KEYCHAIN TEXT) */}
+          {/* DÜZ ANA HARF */}
           <Text3D
             name="TextMain"
             key={`main-${text}-${isItalic}-${isThicknessThick}-${baseHeight}-optimer`}
@@ -132,14 +189,12 @@ export const Scene3D = ({
                 self.geometry.computeBoundingBox();
                 let bbox = self.geometry.boundingBox;
                 
-                // Metni merkeze al ve taban yüzeyinin tam üstüne koy
                 self.geometry.translate(
                   -(bbox.max.x + bbox.min.x) / 2, 
                   -(bbox.max.y + bbox.min.y) / 2,                    
-                  0 // Z'yi sıfırla, döndürünce Y olacak
+                  0 
                 );
 
-                // Eğikliği (Italic) uygula
                 if (isItalic) {
                   const positions = self.geometry.attributes.position;
                   const italicRad = THREE.MathUtils.degToRad(12);
@@ -151,21 +206,17 @@ export const Scene3D = ({
                   }
                 }
 
-                // X-Y düzleminden X-Z düzlemine yatır (-90 derece rotasyon)
                 self.geometry.rotateX(-Math.PI / 2);
-                
-                // Taban yüksekliği kadar yukarı kaldır
                 self.geometry.translate(0, baseH, 0);
 
                 self.geometry.computeVertexNormals();
                 self.geometry.computeBoundingBox();
                 self.geometry.userData.morphed = true;
 
-                // Gerçek boyutları güncelle (Rotasyondan sonra bounding box değişir)
                 const fbox = self.geometry.boundingBox;
                 setTextSize([
                   fbox.max.x - fbox.min.x,
-                  fbox.max.z - fbox.min.z, // Z ekseni artık derinlik(Y) oldu
+                  fbox.max.z - fbox.min.z, 
                   fbox.max.y - fbox.min.y
                 ]);
               }
@@ -175,7 +226,7 @@ export const Scene3D = ({
             <meshStandardMaterial color={materialColor} roughness={0.4} metalness={0.1} />
           </Text3D>
 
-          {/* TABAN PLAKASI (DELİKLİ VE DÜZ) */}
+          {/* TABAN PLAKASI */}
           <mesh 
             name="BasePlate" 
             position={[baseCenterX, 0, baseCenterZ]} 
@@ -193,7 +244,6 @@ export const Scene3D = ({
           <planeGeometry args={[scaledBaseW + 40, scaledBaseD + 40]} />
           <shadowMaterial opacity={0.15} />
         </mesh>
-
       </group>
     </>
   );

@@ -12,6 +12,7 @@ const App = () => {
   const [isThicknessThick, setIsThicknessThick] = useState(true);
   const [materialColor, setMaterialColor] = useState('#22C55E'); // Yazı Rengi
   const [baseColor, setBaseColor] = useState('#0F172A'); // Taban Rengi
+  const [baseShape, setBaseShape] = useState('rectangle'); // Taban Şekli
   const [holePosition, setHolePosition] = useState('top_left'); // Delik Konumu
   const [targetWidth, setTargetWidth] = useState(100); // 10 cm (anahtarlık için varsayılan)
   const [textOffset, setTextOffset] = useState(0);
@@ -85,6 +86,8 @@ const App = () => {
             setMaterialColor={setMaterialColor}
             baseColor={baseColor}
             setBaseColor={setBaseColor}
+            baseShape={baseShape}
+            setBaseShape={setBaseShape}
             holePosition={holePosition}
             setHolePosition={setHolePosition}
             textOffset={textOffset}
@@ -167,6 +170,7 @@ const App = () => {
                 isThicknessThick={isThicknessThick}
                 materialColor={materialColor}
                 baseColor={baseColor}
+                baseShape={baseShape}
                 holePosition={holePosition}
                 textOffset={textOffset}
                 autoCenter={autoCenter}
