@@ -67,47 +67,51 @@ const createTeardropShape = (width, depth, isLeft, holeConfig) => {
   return shape;
 };
 
-// Kalp taban şekli
+// Kalp taban şekli - Three.js resmi kalp formülü (kanıtlanmış bezier eğrileri)
 const createHeartBaseShape = (width, depth, holeConfig) => {
+  // Önce birim kalp çiz, sonra ölçekle
+  const raw = new THREE.Shape();
+  
+  // Three.js official heart (origin offset: x+5, y+5 based)
+  raw.moveTo(5, 5);
+  raw.bezierCurveTo(5, 5, 4, 0, 0, 0);
+  raw.bezierCurveTo(-6, 0, -6, 7, -6, 7);
+  raw.bezierCurveTo(-6, 11, -3, 15.4, 5, 19);
+  raw.bezierCurveTo(12, 15.4, 16, 11, 16, 7);
+  raw.bezierCurveTo(16, 7, 16, 0, 10, 0);
+  raw.bezierCurveTo(7, 0, 5, 5, 5, 5);
+  
+  // Bu kalbin bounding box'ı: x: -6..16 (w=22), y: 0..19 (h=19)
+  // Merkez: x=5, y=9.5
+  const rawW = 22;
+  const rawH = 19;
+  const rawCx = 5;   // merkez x
+  const rawCy = 9.5; // merkez y
+  
+  // Hedef boyut: yazıyı rahatça içine alsın
+  const targetSize = Math.max(width, depth) * 0.9;
+  const scaleX = targetSize / rawW;
+  const scaleY = targetSize / rawH;
+  const uniformScale = Math.max(scaleX, scaleY);
+  
+  // Yeni centered + scaled shape oluştur
   const shape = new THREE.Shape();
+  const pts = raw.getPoints(64);
   
-  // Kalp kendi oranını korumalı, yazıyı içine alacak kadar büyük olmalı
-  // Kalbin kullanılabilir iç alanı yaklaşık %60'ı, geri kalanı kavisler
-  const neededSize = Math.max(width, depth) * 0.85;
-  const s = neededSize;
+  for (let i = 0; i < pts.length; i++) {
+    const px = (pts[i].x - rawCx) * uniformScale;
+    const py = (pts[i].y - rawCy) * uniformScale;
+    if (i === 0) shape.moveTo(px, py);
+    else shape.lineTo(px, py);
+  }
+  shape.closePath();
   
-  // Klasik kalp şekli — üstte iki tepe, altta sivri uç
-  // Başlangıç: üst orta çukur
-  shape.moveTo(0, s * 0.35);
-  
-  // Sağ üst tepe
-  shape.bezierCurveTo(
-    s * 0.15, s * 0.65,   // kontrol 1
-    s * 0.55, s * 0.8,    // kontrol 2  
-    s * 0.55, s * 0.4     // bitiş: sağ tepenin alt kısmı
-  );
-  shape.bezierCurveTo(
-    s * 0.55, s * 0.05,   // kontrol 1
-    s * 0.25, -s * 0.25,  // kontrol 2
-    0, -s * 0.55          // bitiş: alt sivri uç
-  );
-  
-  // Sol üst tepe (simetrik)
-  shape.bezierCurveTo(
-    -s * 0.25, -s * 0.25, // kontrol 1
-    -s * 0.55, s * 0.05,  // kontrol 2
-    -s * 0.55, s * 0.4    // bitiş: sol tepenin alt kısmı
-  );
-  shape.bezierCurveTo(
-    -s * 0.55, s * 0.8,   // kontrol 1
-    -s * 0.15, s * 0.65,  // kontrol 2
-    0, s * 0.35           // bitiş: üst orta çukur
-  );
-  
-  // Delik: iki tepe arasındaki çukura
+  // Delik: iki tepe arasındaki çukura (scaled center top)
   if (holeConfig) {
     const holePath = new THREE.Path();
-    holePath.absarc(0, s * 0.35, holeConfig.r, 0, Math.PI * 2, true);
+    // Çukur noktası: raw (5, 5) -> centered (0, (5-9.5)*scale) = (0, -4.5*scale)
+    const holeY = (5 - rawCy) * uniformScale;
+    holePath.absarc(0, holeY, holeConfig.r, 0, Math.PI * 2, true);
     shape.holes.push(holePath);
   }
   
