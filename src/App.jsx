@@ -8,13 +8,15 @@ import { useTranslation } from 'react-i18next';
 
 const App = () => {
   const [text, setText] = useState('YM2KY');
+  const [subText, setSubText] = useState(''); // Alt Metin
   const [isItalic, setIsItalic] = useState(false);
   const [isThicknessThick, setIsThicknessThick] = useState(true);
   const [materialColor, setMaterialColor] = useState('#22C55E'); // Yazı Rengi
   const [baseColor, setBaseColor] = useState('#0F172A'); // Taban Rengi
   const [baseShape, setBaseShape] = useState('rectangle'); // Taban Şekli
   const [holePosition, setHolePosition] = useState('top_left'); // Delik Konumu
-  const [targetWidth, setTargetWidth] = useState(100); // 10 cm (anahtarlık için varsayılan)
+  const [targetWidth, setTargetWidth] = useState(0); // OTO
+  const [textScale, setTextScale] = useState(100); // Yazı Boyutu (%)
   const [textOffset, setTextOffset] = useState(0);
   const [autoCenter, setAutoCenter] = useState(true);
   const [baseHeight, setBaseHeight] = useState(3.0); // İnce taban (anahtarlık)
@@ -78,6 +80,8 @@ const App = () => {
           <SettingsCard 
             text={text} 
             setText={setText}
+            subText={subText}
+            setSubText={setSubText}
             isItalic={isItalic} 
             setIsItalic={setIsItalic}
             isThicknessThick={isThicknessThick}
@@ -90,6 +94,8 @@ const App = () => {
             setBaseShape={setBaseShape}
             holePosition={holePosition}
             setHolePosition={setHolePosition}
+            textScale={textScale}
+            setTextScale={setTextScale}
             textOffset={textOffset}
             setTextOffset={setTextOffset}
             autoCenter={autoCenter}
@@ -100,31 +106,6 @@ const App = () => {
             setTargetWidth={setTargetWidth}
             onExport={(isMultiColor) => handleExport(groupRef, text, isMultiColor)}
           />
-
-          {/* Tips Section */}
-          <div className="flex flex-col gap-3 w-full max-w-sm">
-            <div className="bg-[#FEF5E7] p-4 rounded-xl shadow-sm border border-orange-100/50 flex gap-3 text-sm text-amber-800/80">
-              <Lightbulb size={20} className="text-amber-700 shrink-0 mt-0.5" />
-              <p className="leading-snug text-[13px]">
-                {t('tip')}
-              </p>
-            </div>
-            
-            <div className="bg-emerald-50 p-4 rounded-xl shadow-sm border border-emerald-100/50 flex gap-3 text-sm text-emerald-800/80">
-              <span className="text-lg shrink-0 mt-0.5">🎨</span>
-              <p className="leading-tight text-[12px]">
-                <strong className="block mb-1 text-emerald-900">{t('ams_tip_title')}</strong>
-                {t('ams_tip')}
-              </p>
-            </div>
-
-            <div className="bg-rose-50 p-4 rounded-xl shadow-sm border border-rose-100/50 flex gap-3 text-sm text-rose-800/80">
-              <p className="leading-tight text-[12px]">
-                {t('ignore_cantilever')}
-              </p>
-            </div>
-          </div>
-
 
         </div>
 
@@ -165,6 +146,7 @@ const App = () => {
             <Canvas shadows dpr={[1, 2]} camera={{ position: [0, 4, 14], fov: 50 }}>
               <Scene3D 
                 text={text} 
+                subText={subText}
                 isItalic={isItalic} 
                 groupRef={groupRef}
                 isThicknessThick={isThicknessThick}
@@ -172,6 +154,7 @@ const App = () => {
                 baseColor={baseColor}
                 baseShape={baseShape}
                 holePosition={holePosition}
+                textScale={textScale}
                 textOffset={textOffset}
                 autoCenter={autoCenter}
                 baseHeight={baseHeight}

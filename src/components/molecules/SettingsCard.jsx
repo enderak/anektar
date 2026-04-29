@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 
 export const SettingsCard = ({ 
   text, setText, 
+  subText, setSubText,
   isItalic, setIsItalic, 
   isThicknessThick, setIsThicknessThick,
   materialColor, setMaterialColor,
@@ -12,6 +13,7 @@ export const SettingsCard = ({
   baseShape, setBaseShape,
   plateThickness, setPlateThickness,
   holePosition, setHolePosition,
+  textScale, setTextScale,
   textOffset, setTextOffset,
   autoCenter, setAutoCenter,
   baseHeight, setBaseHeight,
@@ -21,11 +23,11 @@ export const SettingsCard = ({
   const { t, i18n } = useTranslation();
 
   const colors = [
-    { value: '#22C55E', label: 'Sakarya Green' }, // Açık Yeşil
-    { value: '#0F172A', label: 'Sakarya Black' }, // Siyah
-    { value: '#3B82F6', label: 'Blue' },   // Mavi
-    { value: '#FBBF24', label: 'Yellow' }, // Sarı
-    { value: '#F87171', label: 'Coral' },  // Mercan
+    { value: '#22C55E', label: 'Sakarya Green' }, 
+    { value: '#0F172A', label: 'Sakarya Black' }, 
+    { value: '#3B82F6', label: 'Blue' },   
+    { value: '#FBBF24', label: 'Yellow' }, 
+    { value: '#F87171', label: 'Coral' },  
   ];
 
   return (
@@ -40,9 +42,6 @@ export const SettingsCard = ({
         <div className="bg-slate-100/80 p-1 rounded-xl flex items-center h-11 w-full relative">
           {[
             { code: 'TR', name: 'TÜRKÇE' },
-            { code: 'AZ', name: 'AZƏRBAYCANCA' },
-            { code: 'ES', name: 'ESPAÑOL' },
-            { code: 'DE', name: 'DEUTSCH' },
             { code: 'EN', name: 'ENGLISH' },
           ].map((lang) => (
             <button
@@ -61,15 +60,27 @@ export const SettingsCard = ({
         </div>
       </div>
 
-      {/* Text Input */}
-      <div className="flex flex-col gap-2">
-        <label className="text-[11px] font-bold text-slate-500">{t('label_text')}</label>
-        <input 
-          value={text}
-          onChange={(e) => setText(e.target.value.toLocaleUpperCase('tr-TR'))}
-          className="w-full bg-white border border-slate-200/80 text-sm text-slate-800 py-3 px-4 rounded-xl outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-50/50 transition-all shadow-sm shadow-slate-100/50"
-          placeholder={t('placeholder')}
-        />
+      {/* Text Inputs */}
+      <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-2">
+          <label className="text-[11px] font-bold text-slate-500">{t('label_text')}</label>
+          <input 
+            value={text}
+            onChange={(e) => setText(e.target.value.toLocaleUpperCase('tr-TR'))}
+            className="w-full bg-white border border-slate-200/80 text-sm font-bold text-slate-800 py-2.5 px-4 rounded-xl outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-50/50 transition-all shadow-sm"
+            placeholder={t('placeholder')}
+          />
+        </div>
+        
+        <div className="flex flex-col gap-2">
+          <label className="text-[11px] font-bold text-slate-500">{t('sub_text')}</label>
+          <input 
+            value={subText}
+            onChange={(e) => setSubText(e.target.value.toLocaleUpperCase('tr-TR'))}
+            className="w-full bg-white border border-slate-200/80 text-sm font-bold text-slate-800 py-2.5 px-4 rounded-xl outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-50/50 transition-all shadow-sm"
+            placeholder={t('placeholder_sub')}
+          />
+        </div>
       </div>
 
       {/* Toggles Row: Kalınlık & İtalik */}
@@ -78,7 +89,6 @@ export const SettingsCard = ({
         <div className="flex-1 flex flex-col gap-2">
           <label className="text-[11px] font-bold text-slate-500">{t('font_weight')}</label>
           <div className="bg-slate-100/80 p-1 rounded-xl flex items-center h-11 w-full relative">
-            {/* Sliding Background */}
             <div 
               className={`absolute top-1 bottom-1 w-[calc(50%-4px)] bg-white rounded-lg shadow-sm transition-transform duration-300 ease-in-out ${
                 !isThicknessThick ? 'translate-x-[calc(100%+4px)]' : 'translate-x-0'
@@ -213,6 +223,21 @@ export const SettingsCard = ({
           </div>
         </div>
 
+        {/* Yazı Boyutu (Scale) */}
+        <div className="flex flex-col gap-3">
+          <div className="flex justify-between items-center text-[10px] font-bold text-slate-500">
+            <span>{t('text_scale')}</span>
+            <span>{textScale}%</span>
+          </div>
+          <input 
+            type="range" 
+            min="40" max="150" step="1"
+            value={textScale}
+            onChange={(e) => setTextScale(parseInt(e.target.value))}
+            className="w-full h-1 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-emerald-600 outline-none"
+          />
+        </div>
+
         {/* Taban Yüksekliği (Base Height) */}
         <div className="flex flex-col gap-3">
           <div className="flex justify-between items-center text-[10px] font-bold text-slate-500">
@@ -221,7 +246,7 @@ export const SettingsCard = ({
           </div>
           <input 
             type="range" 
-            min="3" max="15" step="0.5"
+            min="2" max="10" step="0.5"
             value={baseHeight}
             onChange={(e) => setBaseHeight(parseFloat(e.target.value))}
             className="w-full h-1 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-emerald-600 outline-none"
@@ -231,44 +256,23 @@ export const SettingsCard = ({
         {/* --- YENİ: KONUM AYARLARI --- */}
         <div className="w-full h-px bg-slate-100/80 my-1"></div>
         
-        {/* Üretim Uzunluğu Seçici */}
+        {/* Üretim Uzunluğu Seçici (Dropdown) */}
         <div className="flex flex-col gap-2">
           <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">{t('fixed_length')}</label>
-          <div className="bg-slate-100/80 p-1 rounded-xl flex items-center h-11 w-full relative">
-              <button 
-                onClick={() => setTargetWidth(100)}
-                className={`z-10 flex-1 text-[11px] font-bold tracking-wider rounded-lg h-full transition-colors ${
-                  targetWidth === 100 ? 'bg-white shadow-sm text-emerald-600' : 'text-slate-400 hover:text-slate-600'
-                }`}
-              >
-                10 cm
-              </button>
-              <button 
-                onClick={() => setTargetWidth(150)}
-                className={`z-10 flex-1 text-[11px] font-bold tracking-wider rounded-lg h-full transition-colors ${
-                  targetWidth === 150 ? 'bg-white shadow-sm text-emerald-600' : 'text-slate-400 hover:text-slate-600'
-                }`}
-              >
-                15 cm
-              </button>
-              <button 
-                onClick={() => setTargetWidth(200)}
-                className={`z-10 flex-1 text-[11px] font-bold tracking-wider rounded-lg h-full transition-colors ${
-                  targetWidth === 200 ? 'bg-white shadow-sm text-emerald-600' : 'text-slate-400 hover:text-slate-600'
-                }`}
-              >
-                20 cm
-              </button>
-              <button 
-                onClick={() => setTargetWidth(null)}
-                className={`z-10 flex-1 text-[11px] font-bold tracking-wider rounded-lg h-full transition-colors flex items-center justify-center gap-1 ${
-                  targetWidth === null ? 'bg-white shadow-sm text-emerald-600' : 'text-slate-400 hover:text-slate-600'
-                }`}
-                title={t('auto_length_tooltip')}
-              >
-                {t('auto')}
-              </button>
-          </div>
+          <select
+            value={targetWidth || 0}
+            onChange={(e) => setTargetWidth(parseInt(e.target.value) || 0)}
+            className="bg-white border border-slate-200/80 text-sm font-bold text-slate-700 py-3 px-4 rounded-xl outline-none focus:border-emerald-500 transition-all shadow-sm shadow-slate-100/50 cursor-pointer"
+          >
+            <option value={0}>{t('auto')}</option>
+            <option value={40}>4 {t('width_cm')}</option>
+            <option value={50}>5 {t('width_cm')}</option>
+            <option value={60}>6 {t('width_cm')}</option>
+            <option value={70}>7 {t('width_cm')}</option>
+            <option value={80}>8 {t('width_cm')}</option>
+            <option value={100}>10 {t('width_cm')}</option>
+            <option value={150}>15 {t('width_cm')}</option>
+          </select>
         </div>
 
 

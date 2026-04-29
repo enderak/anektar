@@ -34,7 +34,6 @@ const createRoundedRectShape = (width, depth, radius, holeConfig) => {
 const createTeardropShape = (width, depth, isLeft, holeConfig) => {
   const shape = new THREE.Shape();
   
-  // R_main (Geniş uç) ve R_small (Dar uç/Delik ucu)
   const rMain = depth / 2;
   const rSmall = holeConfig ? holeConfig.r + 4.5 : depth / 3;
 
@@ -47,21 +46,14 @@ const createTeardropShape = (width, depth, isLeft, holeConfig) => {
   const d = cxRight - cxLeft;
   
   // Teğet açıları
-  const theta = Math.asin((rMain - rSmall) / d); // Daralma açısı
+  const theta = Math.asin((rMain - rSmall) / d); 
   const angleLeft = isLeft ? theta : -theta;
   const angleRight = isLeft ? theta : -theta;
 
   // Saat yönünün tersine (CCW) çizim:
-  // Sağ alt -> Sağ üst yay
   shape.absarc(cxRight, 0, rRight, -Math.PI/2 + angleRight, Math.PI/2 - angleRight, false);
-  
-  // Üst teğet çizgi (Sağ üstten Sol üste)
   shape.lineTo(cxLeft + rLeft * Math.sin(angleLeft), rLeft * Math.cos(angleLeft));
-
-  // Sol üst -> Sol alt yay
   shape.absarc(cxLeft, 0, rLeft, Math.PI/2 + angleLeft, Math.PI*1.5 - angleLeft, false);
-
-  // Alt teğet çizgi (Sol alttan Sağ alta)
   shape.lineTo(cxRight + rRight * Math.sin(-angleRight), -rRight * Math.cos(-angleRight));
 
   // Delik (Hole)
@@ -76,6 +68,7 @@ const createTeardropShape = (width, depth, isLeft, holeConfig) => {
 
 export const Scene3D = ({
   text,
+  subText,
   isItalic,
   groupRef,
   isThicknessThick,
@@ -83,16 +76,26 @@ export const Scene3D = ({
   baseColor,
   baseShape: selectedShape,
   holePosition,
+  textScale,
   textOffset,
   autoCenter,
   baseHeight,
   targetWidth
 }) => {
-  const [textSize, setTextSize] = useState([60, 20, 6]);
+  const [textSizeMain, setTextSizeMain] = useState([60, 20, 6]);
+  const [textSizeSub, setTextSizeSub] = useState([0, 0, 0]);
 
-  const letterSize = 30.0;         
+  const scaleRatio = (textScale || 100) / 100.0;
+  const letterSize = 30.0 * scaleRatio;         
   const textDepth = isThicknessThick ? 5.0 : 2.5;
   const baseH = baseHeight;        
+
+  const hasSubText = subText && subText.trim().length > 0;
+  
+  // Y ekseni (3D Z ekseni) metin yerleşimi
+  const lineSpacing = letterSize * 1.3;
+  const mainYOffset = hasSubText ? (lineSpacing / 2) : 0;
+  const subYOffset = hasSubText ? -(lineSpacing / 2) : 0;
 
   // Padding ayarları
   const isLeft = holePosition.includes('left');
@@ -100,15 +103,20 @@ export const Scene3D = ({
   
   const pLeft = isLeft ? 24.0 : 10.0;
   const pRight = isRight ? 24.0 : 10.0;
-  const pTop = 10.0;
-  const pBottom = 10.0;
+  const pTop = 12.0;
+  const pBottom = 12.0;
 
-  let baseW = textSize[0] + pLeft + pRight;
-  let baseD = textSize[1] + pTop + pBottom;
+  // Taban genişliği için en uzun metni baz al
+  const maxTextWidth = Math.max(textSizeMain[0], textSizeSub[0]);
+  let baseW = maxTextWidth + pLeft + pRight;
+  
+  // Taban derinliği (satır sayısına göre)
+  const totalTextDepth = hasSubText ? (lineSpacing + letterSize) : letterSize;
+  let baseD = totalTextDepth + pTop + pBottom;
 
   // Damla şeklinde uçlar yuvarlak olduğu için yazının taşmaması adına ekstra genişlik
   if (selectedShape === 'teardrop') {
-    baseW += 10.0;
+    baseW += (10.0 * scaleRatio);
   }
 
   // Tabanın merkezi
@@ -140,6 +148,7 @@ export const Scene3D = ({
     holeZ = 0;
   }
 
+  // OTO (0) ise 1 çarpan, değilse hedef ölçekleme
   const innerScale = targetWidth ? (targetWidth / baseW) : 1;
   const scaledCenterZ = baseCenterZ * innerScale;
   const scaledBaseW = baseW * innerScale;
@@ -159,9 +168,49 @@ export const Scene3D = ({
     }
   }, [selectedShape, baseW, baseD, isLeft, holeX, holeZ, holeR]);
 
+  const processTextGeometry = (self, setSizeFunc, yOffset) => {
+    if (!self.geometry.userData.morphed) {
+      self.geometry.computeBoundingBox();
+      let bbox = self.geometry.boundingBox;
+      
+      self.geometry.translate(
+        -(bbox.max.x + bbox.min.x) / 2, 
+        -(bbox.max.y + bbox.min.y) / 2,                    
+        0 
+      );
+
+      if (isItalic) {
+        const positions = self.geometry.attributes.position;
+        const italicRad = THREE.MathUtils.degToRad(12);
+        for(let i = 0; i < positions.count; i++) {
+            const x = positions.getX(i);
+            const y = positions.getY(i);
+            const xShift = y * Math.tan(italicRad);
+            positions.setX(i, x + xShift);
+        }
+      }
+
+      self.geometry.rotateX(-Math.PI / 2);
+      
+      // Tabanın üstüne ve yOffset'e göre konumlandır (Z ekseninde kaydırıyoruz çünkü rotateX yaptık)
+      self.geometry.translate(0, baseH, yOffset);
+
+      self.geometry.computeVertexNormals();
+      self.geometry.computeBoundingBox();
+      self.geometry.userData.morphed = true;
+
+      const fbox = self.geometry.boundingBox;
+      setSizeFunc([
+        fbox.max.x - fbox.min.x,
+        fbox.max.z - fbox.min.z, 
+        fbox.max.y - fbox.min.y
+      ]);
+    }
+  };
+
   return (
     <>
-      <PerspectiveCamera makeDefault position={[0, 15, 25]} fov={38} />
+      <PerspectiveCamera makeDefault position={[0, 20, 30]} fov={35} />
       <OrbitControls 
         makeDefault 
         minPolarAngle={0.1} 
@@ -175,56 +224,37 @@ export const Scene3D = ({
       <group scale={[SCALE, SCALE, SCALE]} position={[0, -0.5, zCenterOffset * SCALE]}>
         <group ref={groupRef} scale={[innerScale, innerScale, innerScale]}>
 
-          {/* DÜZ ANA HARF */}
+          {/* ANA METİN */}
           <Text3D
             name="TextMain"
-            key={`main-${text}-${isItalic}-${isThicknessThick}-${baseHeight}-optimer`}
+            key={`main-${text}-${isItalic}-${isThicknessThick}-${baseHeight}-${scaleRatio}-${hasSubText}-optimer`}
             font="/fonts/optimer_bold.typeface.json"
             size={letterSize}
             height={textDepth}
             curveSegments={16}
             bevelEnabled={false}
-            onUpdate={(self) => {
-              if (!self.geometry.userData.morphed) {
-                self.geometry.computeBoundingBox();
-                let bbox = self.geometry.boundingBox;
-                
-                self.geometry.translate(
-                  -(bbox.max.x + bbox.min.x) / 2, 
-                  -(bbox.max.y + bbox.min.y) / 2,                    
-                  0 
-                );
-
-                if (isItalic) {
-                  const positions = self.geometry.attributes.position;
-                  const italicRad = THREE.MathUtils.degToRad(12);
-                  for(let i = 0; i < positions.count; i++) {
-                      const x = positions.getX(i);
-                      const y = positions.getY(i);
-                      const xShift = y * Math.tan(italicRad);
-                      positions.setX(i, x + xShift);
-                  }
-                }
-
-                self.geometry.rotateX(-Math.PI / 2);
-                self.geometry.translate(0, baseH, 0);
-
-                self.geometry.computeVertexNormals();
-                self.geometry.computeBoundingBox();
-                self.geometry.userData.morphed = true;
-
-                const fbox = self.geometry.boundingBox;
-                setTextSize([
-                  fbox.max.x - fbox.min.x,
-                  fbox.max.z - fbox.min.z, 
-                  fbox.max.y - fbox.min.y
-                ]);
-              }
-            }}
+            onUpdate={(self) => processTextGeometry(self, setTextSizeMain, -mainYOffset)}
           >
-            {text || "73"}
+            {text || " "}
             <meshStandardMaterial color={materialColor} roughness={0.4} metalness={0.1} />
           </Text3D>
+
+          {/* ALT METİN (Opsiyonel) */}
+          {hasSubText && (
+            <Text3D
+              name="TextSub"
+              key={`sub-${subText}-${isItalic}-${isThicknessThick}-${baseHeight}-${scaleRatio}-optimer`}
+              font="/fonts/optimer_bold.typeface.json"
+              size={letterSize}
+              height={textDepth}
+              curveSegments={16}
+              bevelEnabled={false}
+              onUpdate={(self) => processTextGeometry(self, setTextSizeSub, -subYOffset)}
+            >
+              {subText}
+              <meshStandardMaterial color={materialColor} roughness={0.4} metalness={0.1} />
+            </Text3D>
+          )}
 
           {/* TABAN PLAKASI */}
           <mesh 
