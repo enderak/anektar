@@ -269,15 +269,15 @@ export const Scene3D = ({
       const scaleF = currentWidth > 0 ? (letterSize / currentWidth) : 1;
       self.geometry.scale(scaleF, scaleF, 1); // Depth is already textDepth, don't scale Z
       
+      if (isItalic) {
+        self.geometry.applyMatrix4(shearMatrix);
+      }
+
       self.geometry.rotateX(-Math.PI / 2);
 
       // Move to correct X position
       const iconShiftX = iconPosition === 'left' ? -(maxTextWidth / 2 + 2.5) : (maxTextWidth / 2 + 2.5);
       self.geometry.translate(baseCenterX + iconShiftX, baseH, 0);
-
-      if (isItalic) {
-        self.geometry.applyMatrix4(shearMatrix);
-      }
       
       self.geometry.computeVertexNormals();
       self.geometry.userData.morphed = true;
@@ -297,16 +297,16 @@ export const Scene3D = ({
         0 
       );
 
+      if (isItalic) {
+        self.geometry.applyMatrix4(shearMatrix);
+      }
+
       self.geometry.rotateX(-Math.PI / 2);
       
       const textShiftX = iconShapes.length > 0 ? (iconPosition === 'left' ? iconTotalWidth / 2 : -iconTotalWidth / 2) : 0;
       
       // Z ekseninde yerleşim
       self.geometry.translate(baseCenterX + textShiftX, baseH, yOffset);
-
-      if (isItalic) {
-        self.geometry.applyMatrix4(shearMatrix);
-      }
 
       self.geometry.computeVertexNormals();
       self.geometry.computeBoundingBox();
