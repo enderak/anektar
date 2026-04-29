@@ -1,8 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { Text3D, PerspectiveCamera, OrbitControls } from '@react-three/drei';
 import * as THREE from 'three';
-import { SVGLoader } from 'three/examples/jsm/loaders/SVGLoader';
-import { svgIcons } from '../../utils/svgIcons';
+import { createIconShape } from '../../utils/svgIcons';
 
 const SCALE = 0.05;
 
@@ -59,6 +58,32 @@ const createTeardropShape = (width, depth, isLeft, holeConfig) => {
   shape.lineTo(cxRight + rRight * Math.sin(angleRight), -rRight * Math.cos(angleRight));
 
   // Delik (Hole)
+  if (holeConfig) {
+    const holePath = new THREE.Path();
+    holePath.absarc(holeConfig.x, holeConfig.y, holeConfig.r, 0, Math.PI * 2, true);
+    shape.holes.push(holePath);
+  }
+  
+  return shape;
+};
+
+// Kalp taban şekli
+const createHeartBaseShape = (width, depth, holeConfig) => {
+  const shape = new THREE.Shape();
+  const s = Math.min(width, depth) / 2;
+  
+  // Kalp üst noktası (çukur kısım)
+  shape.moveTo(0, s * 0.6);
+  
+  // Sağ üst kavis
+  shape.bezierCurveTo(s * 0.1, s * 0.95, s * 0.7, s * 1.1, s, s * 0.6);
+  // Sağ alt
+  shape.bezierCurveTo(s * 1.2, s * 0.1, s * 0.3, -s * 0.5, 0, -s);
+  // Sol alt  
+  shape.bezierCurveTo(-s * 0.3, -s * 0.5, -s * 1.2, s * 0.1, -s, s * 0.6);
+  // Sol üst kavis
+  shape.bezierCurveTo(-s * 0.7, s * 1.1, -s * 0.1, s * 0.95, 0, s * 0.6);
+  
   if (holeConfig) {
     const holePath = new THREE.Path();
     holePath.absarc(holeConfig.x, holeConfig.y, holeConfig.r, 0, Math.PI * 2, true);
@@ -127,47 +152,14 @@ export const Scene3D = ({
     return "/fonts/optimer_bold.typeface.json";
   }, [fontFamily]);
 
-  // Icon SVG datasını belirle
-  const activeSvgData = useMemo(() => {
+  // Programatik icon shape oluştur
+  const iconShape = useMemo(() => {
     if (iconType === 'none') return null;
-    if (iconType === 'custom' && customSvgUrl) {
-      // FileReader result from Data URL (must be converted or if it's data URL maybe load via fetch?)
-      // We can also just decode base64 SVG or fetch the data URL
-      return fetch(customSvgUrl).then(res => res.text()).catch(() => null);
-    }
-    if (svgIcons[iconType]) {
-      return Promise.resolve(svgIcons[iconType]);
-    }
-    return null;
-  }, [iconType, customSvgUrl]);
+    // Özel SVG desteği şimdilik devre dışı - programatik şekiller kullanılıyor
+    return createIconShape(iconType, letterSize);
+  }, [iconType, letterSize]);
 
-  // SVG datasını state olarak tut
-  const [svgString, setSvgString] = useState(null);
-  React.useEffect(() => {
-    if (activeSvgData) {
-      activeSvgData.then(res => setSvgString(res));
-    } else {
-      setSvgString(null);
-    }
-  }, [activeSvgData]);
-
-  // SVG Shapes
-  const iconShapes = useMemo(() => {
-    if (!svgString) return [];
-    try {
-      const loader = new SVGLoader();
-      const svgData = loader.parse(svgString);
-      const shapes = [];
-      svgData.paths.forEach((path) => {
-        const pathShapes = path.toShapes(true);
-        pathShapes.forEach(shape => shapes.push(shape));
-      });
-      return shapes;
-    } catch (e) {
-      console.error("SVG Parse Error", e);
-      return [];
-    }
-  }, [svgString]);
+  const hasIcon = iconShape !== null;
 
   // Y ekseni (3D Z ekseni) metin yerleşimi
   const lineSpacing = letterSize * 1.3;
@@ -186,7 +178,7 @@ export const Scene3D = ({
   // Taban genişliği için en uzun metni baz al
   const maxTextWidth = Math.max(textSizeMain[0], textSizeSub[0]);
   
-  const iconTotalWidth = iconShapes.length > 0 ? (letterSize + 5.0) : 0;
+  const iconTotalWidth = hasIcon ? (letterSize + 5.0) : 0;
   
   let baseW = maxTextWidth + pLeft + pRight + iconTotalWidth;
   
@@ -234,7 +226,9 @@ export const Scene3D = ({
 
   // Taban şekli seçimi
   const baseShape = useMemo(() => {
-    if (selectedShape === 'teardrop') {
+    if (selectedShape === 'heart') {
+      return createHeartBaseShape(baseW, baseD, { x: holeX, y: holeZ, r: holeR });
+    } else if (selectedShape === 'teardrop') {
       return createTeardropShape(baseW, baseD, isLeft, { x: holeX, y: holeZ, r: holeR });
     } else {
       return createRoundedRectShape(
@@ -253,21 +247,12 @@ export const Scene3D = ({
       
       if (!bbox || bbox.min.x === Infinity || isNaN(bbox.min.x)) return;
       
-      // Center the SVG
+      // Center the shape
       self.geometry.translate(
         -(bbox.max.x + bbox.min.x) / 2,
         -(bbox.max.y + bbox.min.y) / 2,
         0
       );
-
-      // SVG is usually Y-down, mirror it
-      self.geometry.scale(1, -1, 1);
-      
-      // Scale to letterSize
-      self.geometry.computeBoundingBox();
-      const currentWidth = self.geometry.boundingBox.max.x - self.geometry.boundingBox.min.x;
-      const scaleF = currentWidth > 0 ? (letterSize / currentWidth) : 1;
-      self.geometry.scale(scaleF, scaleF, 1); // Depth is already textDepth, don't scale Z
       
       if (isItalic) {
         self.geometry.applyMatrix4(shearMatrix);
@@ -276,8 +261,9 @@ export const Scene3D = ({
       self.geometry.rotateX(-Math.PI / 2);
 
       // Move to correct X position
-      const iconShiftX = iconPosition === 'left' ? -(maxTextWidth / 2 + 2.5) : (maxTextWidth / 2 + 2.5);
-      self.geometry.translate(baseCenterX + iconShiftX, baseH, 0);
+      const textShiftX = iconPosition === 'left' ? iconTotalWidth / 2 : -iconTotalWidth / 2;
+      const iconShiftX = iconPosition === 'left' ? -(maxTextWidth / 2 + letterSize * 0.5) : (maxTextWidth / 2 + letterSize * 0.5);
+      self.geometry.translate(baseCenterX + iconShiftX + textShiftX, baseH, 0);
       
       self.geometry.computeVertexNormals();
       self.geometry.userData.morphed = true;
@@ -303,7 +289,7 @@ export const Scene3D = ({
 
       self.geometry.rotateX(-Math.PI / 2);
       
-      const textShiftX = iconShapes.length > 0 ? (iconPosition === 'left' ? iconTotalWidth / 2 : -iconTotalWidth / 2) : 0;
+      const textShiftX = hasIcon ? (iconPosition === 'left' ? iconTotalWidth / 2 : -iconTotalWidth / 2) : 0;
       
       // Z ekseninde yerleşim
       self.geometry.translate(baseCenterX + textShiftX, baseH, yOffset);
@@ -372,16 +358,16 @@ export const Scene3D = ({
           )}
 
           {/* SİMGE (ICON) */}
-          {iconShapes.length > 0 && iconShapes.map((shape, idx) => (
+          {hasIcon && (
             <mesh 
-              key={`icon-${idx}-${iconType}-${textDepth}-${baseHeight}-${scaleRatio}-${isItalic}-${iconPosition}`}
-              name={`TextIcon-${idx}`}
+              key={`icon-${iconType}-${textDepth}-${baseHeight}-${scaleRatio}-${isItalic}-${iconPosition}-${letterSize}`}
+              name="TextIcon"
               onUpdate={processIconGeometry}
             >
-              <extrudeGeometry args={[shape, { depth: textDepth, bevelEnabled: false }]} />
+              <extrudeGeometry args={[iconShape, { depth: textDepth, bevelEnabled: false }]} />
               <meshStandardMaterial color={materialColor} roughness={0.4} metalness={0.1} />
             </mesh>
-          ))}
+          )}
 
           {/* TABAN PLAKASI */}
           <mesh 

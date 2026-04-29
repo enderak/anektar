@@ -288,6 +288,14 @@ export const SettingsCard = ({
             >
               {t('shape_teardrop')}
             </button>
+            <button 
+              onClick={() => setBaseShape('heart')}
+              className={`z-10 flex-1 text-[11px] font-bold tracking-wider rounded-lg h-full transition-colors ${
+                baseShape === 'heart' ? 'bg-white shadow-sm text-emerald-600' : 'text-slate-400 hover:text-slate-600'
+              }`}
+            >
+              ❤️ {t('shape_heart')}
+            </button>
           </div>
         </div>
 

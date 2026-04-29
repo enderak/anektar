@@ -1,25 +1,169 @@
 // src/utils/svgIcons.js
+// Programmatik THREE.Shape tanımları - SVGLoader'a ihtiyaç duymaz!
+import * as THREE from 'three';
 
-export const svgIcons = {
-  clover: `
-    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-      <path d="M12 22v-3.5c-1.3-.4-2.8-1-4-2-1.7-1.4-2.5-3.3-2-5 1-3.4 5-3.5 6-1 0 0 .1.2.2.3-.2-.5-.3-1.1-.3-1.8 0-3.3 2.7-6 6-6s6 2.7 6 6-2.7 6-6 6h-1c1 1.2 1.6 2.8 1.5 4.5-.1 1.7-.9 3.2-2.1 4.3C15.1 21 13.6 21.7 12 22z" fill="currentColor"/>
-      <path d="M7 6c-2.8 0-5 2.2-5 5s2.2 5 5 5h2c-1.1-.9-1.9-2.2-2.2-3.6-.5-2.2.1-4.5 1.5-6.2C7.9 6.1 7.5 6 7 6z" fill="currentColor"/>
-    </svg>
-  `,
-  star_crescent: `
-    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10c2.4 0 4.61-.85 6.33-2.26-4.55-1.52-7.83-5.83-7.83-10.94 0-5.11 3.28-9.42 7.83-10.94C16.61 2.85 14.4 2 12 2zm7.5 10l-1.63-1.13L16.25 12l1.62-1.13L19.5 9.75l-.46 1.88L21.05 12l-2.01.37L19.5 14.25z" fill="currentColor"/>
-    </svg>
-  `,
-  heart: `
-    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-      <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" fill="currentColor"/>
-    </svg>
-  `,
-  skull: `
-    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-      <path d="M12 2C7.58 2 4 5.58 4 10c0 3.03 1.68 5.66 4.15 7.02l-.15.98c-.12.75.46 1.43 1.22 1.43h5.56c.76 0 1.34-.68 1.22-1.43l-.15-.98C18.32 15.66 20 13.03 20 10c0-4.42-3.58-8-8-8zm-3 10c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm6 0c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm1 6H8v-2h8v2z" fill="currentColor"/>
-    </svg>
-  `
-};
+/**
+ * Yonca (Four-Leaf Clover) şekli oluşturur
+ * @param {number} size - Toplam boyut
+ * @returns {THREE.Shape}
+ */
+export function createCloverShape(size = 24) {
+  const shape = new THREE.Shape();
+  const r = size * 0.22; // Yaprak yarıçapı
+  const offset = size * 0.15; // Merkeze olan mesafe
+
+  // 4 yaprak (üst, sağ, alt, sol) - her biri tam daire
+  const centers = [
+    { x: 0, y: offset },    // Üst
+    { x: offset, y: 0 },    // Sağ
+    { x: 0, y: -offset },   // Alt
+    { x: -offset, y: 0 },   // Sol
+  ];
+
+  // İlk yaprak ile başla
+  shape.absarc(centers[0].x, centers[0].y, r, 0, Math.PI * 2, false);
+
+  // Diğer yapraklar hole değil, ana shape'e birleştirilmiş gibi olmalı
+  // THREE.Shape tek bir path olduğu için, 4 ayrı shape döndürelim
+  // ve hepsini merge edelim. 
+  // Ancak daha basit bir yaklaşım: kalp benzeri bezier eğrileriyle tek shape çizelim
+  
+  // Daha iyi yaklaşım: 4 yapraklı yonca tek path olarak
+  const s = size / 2;
+  const leaf = s * 0.45;
+  
+  const shape2 = new THREE.Shape();
+  // Merkez noktadan başla
+  shape2.moveTo(0, 0);
+  
+  // Üst yaprak
+  shape2.bezierCurveTo(-leaf, leaf * 0.3, -leaf, leaf * 1.2, 0, leaf * 1.4);
+  shape2.bezierCurveTo(leaf, leaf * 1.2, leaf, leaf * 0.3, 0, 0);
+  
+  // Sağ yaprak
+  shape2.bezierCurveTo(leaf * 0.3, leaf, leaf * 1.2, leaf, leaf * 1.4, 0);
+  shape2.bezierCurveTo(leaf * 1.2, -leaf, leaf * 0.3, -leaf, 0, 0);
+  
+  // Alt yaprak
+  shape2.bezierCurveTo(leaf, -leaf * 0.3, leaf, -leaf * 1.2, 0, -leaf * 1.4);
+  shape2.bezierCurveTo(-leaf, -leaf * 1.2, -leaf, -leaf * 0.3, 0, 0);
+  
+  // Sol yaprak
+  shape2.bezierCurveTo(-leaf * 0.3, -leaf, -leaf * 1.2, -leaf, -leaf * 1.4, 0);
+  shape2.bezierCurveTo(-leaf * 1.2, leaf, -leaf * 0.3, leaf, 0, 0);
+
+  return shape2;
+}
+
+/**
+ * Kalp (Heart) şekli oluşturur
+ * @param {number} size - Toplam boyut
+ * @returns {THREE.Shape}
+ */
+export function createHeartShape(size = 24) {
+  const x = 0, y = 0;
+  const s = size / 2;
+  
+  const shape = new THREE.Shape();
+  shape.moveTo(x, y - s * 0.5);
+  
+  // Sol üst kavis
+  shape.bezierCurveTo(x, y - s * 0.9, x - s, y - s * 0.9, x - s, y - s * 0.3);
+  shape.bezierCurveTo(x - s, y + s * 0.3, x, y + s * 0.5, x, y + s);
+  
+  // Sağ üst kavis (simetrik)
+  shape.bezierCurveTo(x, y + s * 0.5, x + s, y + s * 0.3, x + s, y - s * 0.3);
+  shape.bezierCurveTo(x + s, y - s * 0.9, x, y - s * 0.9, x, y - s * 0.5);
+
+  return shape;
+}
+
+/**
+ * Ay-Yıldız şekli oluşturur
+ * @param {number} size - Toplam boyut
+ * @returns {THREE.Shape}
+ */
+export function createStarCrescentShape(size = 24) {
+  const s = size / 2;
+  const shape = new THREE.Shape();
+  
+  // Dış hilal (ay) - büyük daire
+  const moonR = s * 0.85;
+  shape.absarc(0, 0, moonR, Math.PI * 0.15, Math.PI * 1.85, false);
+  
+  // İç hilal kesimi - daha küçük daire ile kapat
+  const innerR = moonR * 0.72;
+  const offsetX = moonR * 0.35;
+  shape.absarc(offsetX, 0, innerR, Math.PI * 1.85, Math.PI * 0.15, true);
+
+  return shape;
+}
+
+/**
+ * Yıldız (5 köşeli) şekli oluşturur
+ * @param {number} size - Toplam boyut
+ * @returns {THREE.Shape}
+ */
+export function createStarShape(size = 24) {
+  const s = size / 2;
+  const shape = new THREE.Shape();
+  const outerR = s * 0.4;
+  const innerR = outerR * 0.4;
+  const points = 5;
+  
+  for (let i = 0; i < points * 2; i++) {
+    const r = i % 2 === 0 ? outerR : innerR;
+    const angle = (Math.PI / 2) + (i * Math.PI / points);
+    const px = Math.cos(angle) * r;
+    const py = Math.sin(angle) * r;
+    if (i === 0) shape.moveTo(px, py);
+    else shape.lineTo(px, py);
+  }
+  shape.closePath();
+  
+  return shape;
+}
+
+/**
+ * Kurukafa (Skull) şekli oluşturur - basitleştirilmiş silhouette
+ * @param {number} size - Toplam boyut
+ * @returns {THREE.Shape}
+ */
+export function createSkullShape(size = 24) {
+  const s = size / 2;
+  const shape = new THREE.Shape();
+  
+  // Kafa üst kısmı - yarı daire
+  const headR = s * 0.8;
+  shape.absarc(0, s * 0.1, headR, 0, Math.PI, false);
+  
+  // Çene kısmı
+  shape.lineTo(-headR * 0.55, -s * 0.3);
+  shape.quadraticCurveTo(-headR * 0.4, -s * 0.75, 0, -s * 0.75);
+  shape.quadraticCurveTo(headR * 0.4, -s * 0.75, headR * 0.55, -s * 0.3);
+  shape.lineTo(headR, s * 0.1);
+  
+  // Sol göz deliği
+  const eyeR = headR * 0.2;
+  const eyeHole = new THREE.Path();
+  eyeHole.absarc(-headR * 0.35, s * 0.2, eyeR, 0, Math.PI * 2, true);
+  shape.holes.push(eyeHole);
+  
+  // Sağ göz deliği
+  const eyeHole2 = new THREE.Path();
+  eyeHole2.absarc(headR * 0.35, s * 0.2, eyeR, 0, Math.PI * 2, true);
+  shape.holes.push(eyeHole2);
+  
+  return shape;
+}
+
+// Simge fabrika fonksiyonu - type'a göre shape üretir
+export function createIconShape(type, size = 24) {
+  switch (type) {
+    case 'clover': return createCloverShape(size);
+    case 'heart': return createHeartShape(size);
+    case 'star_crescent': return createStarCrescentShape(size);
+    case 'skull': return createSkullShape(size);
+    default: return null;
+  }
+}
