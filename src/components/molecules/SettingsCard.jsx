@@ -6,8 +6,8 @@ import { useTranslation } from 'react-i18next';
 export const SettingsCard = ({ 
   text, setText, 
   subText, setSubText,
-  isItalic, setIsItalic, 
-  isThicknessThick, setIsThicknessThick,
+  textMode, setTextMode,
+  textDepth, setTextDepth,
   materialColor, setMaterialColor,
   baseColor, setBaseColor,
   baseShape, setBaseShape,
@@ -83,50 +83,49 @@ export const SettingsCard = ({
         </div>
       </div>
 
-      {/* Toggles Row: Kalınlık & İtalik */}
-      <div className="flex justify-between gap-4">
-        {/* Yazı Kalınlığı */}
-        <div className="flex-1 flex flex-col gap-2">
-          <label className="text-[11px] font-bold text-slate-500">{t('font_weight')}</label>
+      {/* YENİ: Yazı Tipi (Mod) ve Derinlik */}
+      <div className="flex flex-col gap-4 mt-2">
+        {/* Yazı Modu (Emboss vs Engrave) */}
+        <div className="flex flex-col gap-2">
+          <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">{t('text_mode')}</label>
           <div className="bg-slate-100/80 p-1 rounded-xl flex items-center h-11 w-full relative">
             <div 
               className={`absolute top-1 bottom-1 w-[calc(50%-4px)] bg-white rounded-lg shadow-sm transition-transform duration-300 ease-in-out ${
-                !isThicknessThick ? 'translate-x-[calc(100%+4px)]' : 'translate-x-0'
+                textMode === 'engrave' ? 'translate-x-[calc(100%+4px)]' : 'translate-x-0'
               }`}
             />
             <button 
-              onClick={() => setIsThicknessThick(true)}
+              onClick={() => setTextMode('emboss')}
               className={`z-10 flex-1 text-[11px] font-bold tracking-wider rounded-lg h-full transition-colors ${
-                isThicknessThick ? 'text-slate-800' : 'text-slate-400 hover:text-slate-600'
+                textMode === 'emboss' ? 'text-slate-800' : 'text-slate-400 hover:text-slate-600'
               }`}
             >
-              {t('thick')}
+              {t('mode_emboss')}
             </button>
             <button 
-              onClick={() => setIsThicknessThick(false)}
+              onClick={() => setTextMode('engrave')}
               className={`z-10 flex-1 text-[11px] font-bold tracking-wider rounded-lg h-full transition-colors ${
-                !isThicknessThick ? 'text-slate-800' : 'text-slate-400 hover:text-slate-600'
+                textMode === 'engrave' ? 'text-slate-800' : 'text-slate-400 hover:text-slate-600'
               }`}
             >
-              {t('thin')}
+              {t('mode_engrave')}
             </button>
           </div>
         </div>
 
-        {/* Dönüştürme (İtalik) */}
-        <div className="flex-1 flex flex-col gap-2">
-          <label className="text-[11px] font-bold text-slate-500">{t('transform')}</label>
-          <div className="bg-white border border-slate-200/80 rounded-xl flex items-center justify-between px-4 h-11 cursor-pointer shadow-sm shadow-slate-100/50"
-               onClick={() => setIsItalic(!isItalic)}>
-            <span className="text-xs text-slate-700 font-medium">{t('italic')}</span>
-            <div className={`w-9 h-5 rounded-full flex items-center px-0.5 transition-colors duration-300 ${
-              isItalic ? 'bg-emerald-600' : 'bg-slate-200'
-            }`}>
-              <div className={`w-4 h-4 rounded-full bg-white shadow-sm transition-transform duration-300 ${
-                isItalic ? 'translate-x-4' : 'translate-x-0'
-              }`} />
-            </div>
+        {/* Yazı Derinliği (Çıkıntı veya Oyuk derinliği) */}
+        <div className="flex flex-col gap-3">
+          <div className="flex justify-between items-center text-[10px] font-bold text-slate-500">
+            <span>{t('text_depth')}</span>
+            <span>{textDepth.toFixed(1)}mm</span>
           </div>
+          <input 
+            type="range" 
+            min="0.5" max="5.0" step="0.5"
+            value={textDepth}
+            onChange={(e) => setTextDepth(parseFloat(e.target.value))}
+            className="w-full h-1 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-emerald-600 outline-none"
+          />
         </div>
       </div>
 

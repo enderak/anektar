@@ -5,7 +5,7 @@ Anahtarlık 3D Keychain Generator
 CadQuery tabanlı düz ve damla formlu çift satırlı anahtarlık üretici.
 
 Kullanım:
-  python generator_cq.py --text YONCALI --sub_text MOBILYA --base_shape teardrop --text_scale 80
+  python generator_cq.py --text YONCALI --sub_text MOBILYA --base_shape teardrop --text_scale 80 --text_mode engrave --text_depth 1.5
 """
 
 import cadquery as cq
@@ -22,6 +22,8 @@ parser.add_argument("--text",          type=str,   default="TA4TUN",   help="Ana
 parser.add_argument("--sub_text",      type=str,   default="",         help="Alt metin (2. Satır)")
 parser.add_argument("--font_size",     type=float, default=30.0,       help="Temel yazı boyutu (mm)")
 parser.add_argument("--text_scale",    type=float, default=100.0,      help="Yazı boyutu yüzdesi (%)")
+parser.add_argument("--text_mode",     type=str,   default="emboss",   help="emboss (Çıkıntılı) veya engrave (Gömülü)")
+parser.add_argument("--text_depth",    type=float, default=2.0,        help="Yazı derinliği (mm)")
 parser.add_argument("--base_shape",    type=str,   default="rectangle",help="Taban şekli: rectangle veya teardrop")
 parser.add_argument("--hole_position", type=str,   default="center_left", help="Delik konumu")
 parser.add_argument("--base_height",   type=float, default=3.0,        help="Taban plakası yüksekliği (mm)")
@@ -38,6 +40,8 @@ metin           = args.text
 alt_metin       = args.sub_text
 base_font_size  = args.font_size
 text_scale      = args.text_scale
+text_mode       = args.text_mode
+text_depth      = args.text_depth
 base_shape_type = args.base_shape
 hole_pos        = args.hole_position
 taban_yukseklik = args.base_height
@@ -47,7 +51,7 @@ output_file     = args.output
 
 scale_ratio = text_scale / 100.0
 yazi_boyutu = base_font_size * scale_ratio
-yazi_kalinlik = 2.5
+yazi_kalinlik = text_depth if text_mode == 'emboss' else text_depth + 1.0 # Kesim için biraz daha kalın yapıyoruz
 hole_radius = 3.5
 
 has_sub_text = len(alt_metin.strip()) > 0
@@ -162,11 +166,24 @@ except Exception as e:
 main_y_offset = (line_spacing / 2) if has_sub_text else 0
 sub_y_offset = -(line_spacing / 2) if has_sub_text else 0
 
+# Z ekseninde yerleşim
+z_pos = (taban_yukseklik - text_depth) if text_mode == "engrave" else taban_yukseklik
+
 try:
     # 1. SATIR
     text_3d = (
         cq.Workplane("XY")
-        .translate((0, main_y_offset, taban_yukseklik))
+        .translate((base_center_x, main_y_offset, z_pos))
+        .text(metin, yazi_boyutu, yazi_kalinlik, font=font_adi, kind="bold", halign="center", valign="bottom" if text_mode == "engrave" else "center")
+    )
+    # Eğer engrave ise yazıyı aşağı doğru oluşturması için valign'i bottom yapıp z_pos'tan yukarı uzamasını sağlıyoruz
+    # ya da doğrudan cut edeceğiz. CadQuery default text, XY düzleminde merkezden +Z yönüne doğru kalınlık verir.
+    
+    # Düzeltme: Text normal olarak taban merkezinden başlayıp yukarı kalınlaşıyor. 
+    # Engrave modunda tabanın içinden başlamalı ve yukarı çıkmalı.
+    text_3d = (
+        cq.Workplane("XY")
+        .translate((base_center_x, main_y_offset, z_pos))
         .text(metin, yazi_boyutu, yazi_kalinlik, font=font_adi, kind="bold", halign="center", valign="center")
     )
     
@@ -174,7 +191,7 @@ try:
     if has_sub_text:
         sub_text_3d = (
             cq.Workplane("XY")
-            .translate((0, sub_y_offset, taban_yukseklik))
+            .translate((base_center_x, sub_y_offset, z_pos))
             .text(alt_metin, yazi_boyutu, yazi_kalinlik, font=font_adi, kind="bold", halign="center", valign="center")
         )
         text_3d = text_3d.union(sub_text_3d)
@@ -188,7 +205,10 @@ except Exception as e:
 # ============================================================
 
 try:
-    final_model = base.union(text_3d)
+    if text_mode == "engrave":
+        final_model = base.cut(text_3d)
+    else:
+        final_model = base.union(text_3d)
 except Exception as e:
     final_model = cq.Assembly()
     final_model.add(base)

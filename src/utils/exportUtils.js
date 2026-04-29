@@ -17,20 +17,16 @@ function downloadBlob(blob, filename) {
   }, 100);
 }
 
-export const handleExport = (groupRef, fileName = "SAKRAD_Isimlik", isMultiColor = false) => {
+export const handleExport = (groupRef, fileName = "SAKRAD_Isimlik", isMultiColor = false, textMode = "emboss") => {
   if (!groupRef.current) return;
 
   const exporter = new STLExporter();
   
   // THREE.js Sahesinde Y=Yukarı iken 3D Yazıcılarda (Slicer) Z=Yukarı mantığı vardır.
-  // Bu yüzden aktarmadan hemen önce modeli 90 derece X ekseninde çeviriyoruz 
-  // (böylece tablonun altı düz şekilde tablaya yapışıyor, yüz üstü düşmüyor).
   const originalScale = groupRef.current.scale.clone();
   const originalRotation = groupRef.current.rotation.clone();
 
-  // DUAL EXPORT VE SINGLE EXPORT İÇİN TEK GEÇERLİ BOYUT DÜZELTMESİ (Garantili!)
-  // Sahnede model 0.05 oranında küçüktür (ekrana sığması için). 
-  // Gerçek mm'ye ulaşmak için export anında (ana ebeveyne dokunmadan) bunu 20 ile çarpıyoruz.
+  // Sahnede model 0.05 oranında küçüktür. 20 ile çarpıyoruz.
   groupRef.current.scale.multiplyScalar(20);
   groupRef.current.rotation.x += Math.PI / 2;
   groupRef.current.updateMatrixWorld(true);
@@ -38,23 +34,46 @@ export const handleExport = (groupRef, fileName = "SAKRAD_Isimlik", isMultiColor
   if (isMultiColor) {
     const zip = new JSZip();
 
-    // Sahnedeki (orijinal) çocukları güvenle ayır
-    const allChildren = [...groupRef.current.children];
+    // Düzlemsel ağaç yapısındaki Text objelerini bulmak için genel bir arama yapalım
+    // (Çünkü artık metinler ekstra bir <group> içerisinde)
+    const texts = [];
+    groupRef.current.traverse((child) => {
+      if (child.name && child.name.startsWith("Text")) {
+        texts.push(child);
+      }
+    });
 
     // 1. SADECE TABANI AKTAR
-    groupRef.current.children = allChildren.filter(c => !c.name || !c.name.startsWith("Text"));
+    texts.forEach(t => t.visible = false); // Base aktarılırken textler kapalı olmalı
     groupRef.current.updateMatrixWorld(true);
     const baseResult = exporter.parse(groupRef.current, { binary: true });
     zip.file(`${fileName}_TABAN.stl`, baseResult.buffer);
 
     // 2. SADECE YAZILARI AKTAR
-    groupRef.current.children = allChildren.filter(c => c.name && c.name.startsWith("Text"));
+    // BasePlate'i gizle, yazıları göster
+    const basePlates = [];
+    groupRef.current.traverse((child) => {
+      if (child.name === "BasePlate") {
+        basePlates.push(child);
+        child.visible = false;
+      }
+    });
+    
+    texts.forEach(t => t.visible = true); // Engrave dahi olsa görünür yap!
     groupRef.current.updateMatrixWorld(true);
+    
     const textResult = exporter.parse(groupRef.current, { binary: true });
     zip.file(`${fileName}_YAZI.stl`, textResult.buffer);
 
-    // Çocukları eski haline getir
-    groupRef.current.children = allChildren;
+    // Orijinal görünürlükleri eski haline getir
+    basePlates.forEach(b => b.visible = true);
+    texts.forEach(t => {
+      if (textMode === 'engrave') {
+        t.visible = false;
+      } else {
+        t.visible = true;
+      }
+    });
     
     // Zip indir
     zip.generateAsync({ type: "blob" }).then((content) => {

@@ -9,8 +9,8 @@ import { useTranslation } from 'react-i18next';
 const App = () => {
   const [text, setText] = useState('YM2KY');
   const [subText, setSubText] = useState(''); // Alt Metin
-  const [isItalic, setIsItalic] = useState(false);
-  const [isThicknessThick, setIsThicknessThick] = useState(true);
+  const [textMode, setTextMode] = useState('emboss'); // 'emboss' (Çıkıntılı) veya 'engrave' (Gömülü)
+  const [textDepth, setTextDepth] = useState(2.0); // Derinlik veya Çıkıntı yüksekliği (mm)
   const [materialColor, setMaterialColor] = useState('#22C55E'); // Yazı Rengi
   const [baseColor, setBaseColor] = useState('#0F172A'); // Taban Rengi
   const [baseShape, setBaseShape] = useState('rectangle'); // Taban Şekli
@@ -82,10 +82,10 @@ const App = () => {
             setText={setText}
             subText={subText}
             setSubText={setSubText}
-            isItalic={isItalic} 
-            setIsItalic={setIsItalic}
-            isThicknessThick={isThicknessThick}
-            setIsThicknessThick={setIsThicknessThick}
+            textMode={textMode}
+            setTextMode={setTextMode}
+            textDepth={textDepth}
+            setTextDepth={setTextDepth}
             materialColor={materialColor}
             setMaterialColor={setMaterialColor}
             baseColor={baseColor}
@@ -104,7 +104,7 @@ const App = () => {
             setBaseHeight={setBaseHeight}
             targetWidth={targetWidth}
             setTargetWidth={setTargetWidth}
-            onExport={(isMultiColor) => handleExport(groupRef, text, isMultiColor)}
+            onExport={(isMultiColor) => handleExport(groupRef, text, isMultiColor, textMode)}
           />
 
         </div>
@@ -132,24 +132,17 @@ const App = () => {
 
           </div>
 
-          {/* Width / Height display markers (Visual only mockup) */}
-          <div className="absolute left-6 top-32 flex flex-col gap-3 z-10 pointer-events-none opacity-40">
-            <div className="flex items-center gap-2 text-[10px] font-mono whitespace-nowrap"><div className="w-8 h-px bg-slate-600"></div> W: {Math.max((text.length * 28), 30)}mm</div>
-            <div className="flex items-center gap-2 text-[10px] font-mono whitespace-nowrap"><div className="w-8 h-px bg-slate-600"></div> H: 30mm</div>
-          </div>
-
           {/* The Actual Canvas */}
           <div className="absolute inset-0 z-0">
-            {/* Soft gradient background simulating floor in canvas behind 3D space */}
             <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#f8fbff] to-white/50 pointer-events-none"></div>
             
             <Canvas shadows dpr={[1, 2]} camera={{ position: [0, 4, 14], fov: 50 }}>
               <Scene3D 
                 text={text} 
                 subText={subText}
-                isItalic={isItalic} 
+                textMode={textMode}
+                textDepth={textDepth}
                 groupRef={groupRef}
-                isThicknessThick={isThicknessThick}
                 materialColor={materialColor}
                 baseColor={baseColor}
                 baseShape={baseShape}

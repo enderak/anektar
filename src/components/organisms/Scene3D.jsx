@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { Text3D, PerspectiveCamera, OrbitControls } from '@react-three/drei';
+import { Geometry, Base, Subtraction } from '@react-three/csg';
 import * as THREE from 'three';
 
 const SCALE = 0.05;
@@ -69,9 +70,9 @@ const createTeardropShape = (width, depth, isLeft, holeConfig) => {
 export const Scene3D = ({
   text,
   subText,
-  isItalic,
+  textMode, // 'emboss' veya 'engrave'
+  textDepth,
   groupRef,
-  isThicknessThick,
   materialColor,
   baseColor,
   baseShape: selectedShape,
@@ -84,10 +85,12 @@ export const Scene3D = ({
 }) => {
   const [textSizeMain, setTextSizeMain] = useState([60, 20, 6]);
   const [textSizeSub, setTextSizeSub] = useState([0, 0, 0]);
+  
+  const [textGeomMain, setTextGeomMain] = useState(null);
+  const [textGeomSub, setTextGeomSub] = useState(null);
 
   const scaleRatio = (textScale || 100) / 100.0;
   const letterSize = 30.0 * scaleRatio;         
-  const textDepth = isThicknessThick ? 5.0 : 2.5;
   const baseH = baseHeight;        
 
   const hasSubText = subText && subText.trim().length > 0;
@@ -143,12 +146,10 @@ export const Scene3D = ({
     holeZ = 0; // center
   }
 
-  // Damla şeklindeyken deliği her zaman ortalayalım (daha estetik olur)
   if (selectedShape === 'teardrop') {
     holeZ = 0;
   }
 
-  // OTO (0) ise 1 çarpan, değilse hedef ölçekleme
   const innerScale = targetWidth ? (targetWidth / baseW) : 1;
   const scaledCenterZ = baseCenterZ * innerScale;
   const scaledBaseW = baseW * innerScale;
@@ -168,7 +169,7 @@ export const Scene3D = ({
     }
   }, [selectedShape, baseW, baseD, isLeft, holeX, holeZ, holeR]);
 
-  const processTextGeometry = (self, setSizeFunc, yOffset) => {
+  const processTextGeometry = (self, setSizeFunc, setGeomFunc, yOffset) => {
     if (!self.geometry.userData.morphed) {
       self.geometry.computeBoundingBox();
       let bbox = self.geometry.boundingBox;
@@ -179,21 +180,13 @@ export const Scene3D = ({
         0 
       );
 
-      if (isItalic) {
-        const positions = self.geometry.attributes.position;
-        const italicRad = THREE.MathUtils.degToRad(12);
-        for(let i = 0; i < positions.count; i++) {
-            const x = positions.getX(i);
-            const y = positions.getY(i);
-            const xShift = y * Math.tan(italicRad);
-            positions.setX(i, x + xShift);
-        }
-      }
-
       self.geometry.rotateX(-Math.PI / 2);
       
-      // Tabanın üstüne ve yOffset'e göre konumlandır (Z ekseninde kaydırıyoruz çünkü rotateX yaptık)
-      self.geometry.translate(0, baseH, yOffset);
+      // Z ekseninde yerleşim (Gömülü ise aşağı indir, Çıkıntılı ise taban hizasında)
+      const zPos = textMode === 'engrave' ? (baseH - textDepth) : baseH;
+      
+      // X ekseninde 0, çünkü Text3D'leri baseCenterX konumlu bir group içine alacağız.
+      self.geometry.translate(0, zPos, yOffset);
 
       self.geometry.computeVertexNormals();
       self.geometry.computeBoundingBox();
@@ -205,6 +198,9 @@ export const Scene3D = ({
         fbox.max.z - fbox.min.z, 
         fbox.max.y - fbox.min.y
       ]);
+
+      // Geometriyi kaydet (CSG kesim için)
+      setGeomFunc(self.geometry.clone());
     }
   };
 
@@ -224,37 +220,44 @@ export const Scene3D = ({
       <group scale={[SCALE, SCALE, SCALE]} position={[0, -0.5, zCenterOffset * SCALE]}>
         <group ref={groupRef} scale={[innerScale, innerScale, innerScale]}>
 
-          {/* ANA METİN */}
-          <Text3D
-            name="TextMain"
-            key={`main-${text}-${isItalic}-${isThicknessThick}-${baseHeight}-${scaleRatio}-${hasSubText}-optimer`}
-            font="/fonts/optimer_bold.typeface.json"
-            size={letterSize}
-            height={textDepth}
-            curveSegments={16}
-            bevelEnabled={false}
-            onUpdate={(self) => processTextGeometry(self, setTextSizeMain, -mainYOffset)}
-          >
-            {text || " "}
-            <meshStandardMaterial color={materialColor} roughness={0.4} metalness={0.1} />
-          </Text3D>
-
-          {/* ALT METİN (Opsiyonel) */}
-          {hasSubText && (
+          {/* METİNLER (BasePlate ile aynı X kaydırmasına sahip group) */}
+          <group position={[baseCenterX, 0, 0]}>
+            {/* ANA METİN */}
             <Text3D
-              name="TextSub"
-              key={`sub-${subText}-${isItalic}-${isThicknessThick}-${baseHeight}-${scaleRatio}-optimer`}
+              name="TextMain"
+              key={`main-${text}-${textMode}-${textDepth}-${baseHeight}-${scaleRatio}-${hasSubText}-optimer`}
               font="/fonts/optimer_bold.typeface.json"
               size={letterSize}
-              height={textDepth}
+              height={textDepth} // textDepth kullanılıyor
               curveSegments={16}
               bevelEnabled={false}
-              onUpdate={(self) => processTextGeometry(self, setTextSizeSub, -subYOffset)}
+              onUpdate={(self) => processTextGeometry(self, setTextSizeMain, setTextGeomMain, -mainYOffset)}
+              visible={textMode === 'emboss'} // Emboss ise normal görünür
+              userData={{ isEngravedPlug: textMode === 'engrave' }} // Export sırasında tanımak için
             >
-              {subText}
+              {text || " "}
               <meshStandardMaterial color={materialColor} roughness={0.4} metalness={0.1} />
             </Text3D>
-          )}
+
+            {/* ALT METİN (Opsiyonel) */}
+            {hasSubText && (
+              <Text3D
+                name="TextSub"
+                key={`sub-${subText}-${textMode}-${textDepth}-${baseHeight}-${scaleRatio}-optimer`}
+                font="/fonts/optimer_bold.typeface.json"
+                size={letterSize}
+                height={textDepth} // textDepth kullanılıyor
+                curveSegments={16}
+                bevelEnabled={false}
+                onUpdate={(self) => processTextGeometry(self, setTextSizeSub, setTextGeomSub, -subYOffset)}
+                visible={textMode === 'emboss'}
+                userData={{ isEngravedPlug: textMode === 'engrave' }}
+              >
+                {subText}
+                <meshStandardMaterial color={materialColor} roughness={0.4} metalness={0.1} />
+              </Text3D>
+            )}
+          </group>
 
           {/* TABAN PLAKASI */}
           <mesh 
@@ -263,7 +266,27 @@ export const Scene3D = ({
             rotation={[-Math.PI / 2, 0, 0]}
             receiveShadow
           >
-            <extrudeGeometry args={[baseShape, { depth: baseH, bevelEnabled: false }]} />
+            {textMode === 'engrave' && textGeomMain ? (
+              <Geometry useGroups>
+                <Base>
+                  <extrudeGeometry args={[baseShape, { depth: baseH, bevelEnabled: false }]} />
+                </Base>
+                
+                <Subtraction geometry={textGeomMain}>
+                   {/* Kesilen iç yüzeyin rengi yazının kendi rengi olsun */}
+                   <meshStandardMaterial color={materialColor} roughness={0.4} metalness={0.1} />
+                </Subtraction>
+
+                {hasSubText && textGeomSub && (
+                  <Subtraction geometry={textGeomSub}>
+                     <meshStandardMaterial color={materialColor} roughness={0.4} metalness={0.1} />
+                  </Subtraction>
+                )}
+              </Geometry>
+            ) : (
+              <extrudeGeometry args={[baseShape, { depth: baseH, bevelEnabled: false }]} />
+            )}
+
             <meshStandardMaterial color={baseColor || '#334155'} roughness={0.8} />
           </mesh>
 
