@@ -238,6 +238,8 @@ export const Scene3D = ({
       self.geometry.computeBoundingBox();
       const bbox = self.geometry.boundingBox;
       
+      if (!bbox || bbox.min.x === Infinity || isNaN(bbox.min.x)) return;
+      
       // Center the SVG
       self.geometry.translate(
         -(bbox.max.x + bbox.min.x) / 2,
@@ -273,6 +275,8 @@ export const Scene3D = ({
     if (!self.geometry.userData.morphed) {
       self.geometry.computeBoundingBox();
       let bbox = self.geometry.boundingBox;
+      
+      if (!bbox || bbox.min.x === Infinity || isNaN(bbox.min.x)) return;
       
       self.geometry.translate(
         -(bbox.max.x + bbox.min.x) / 2, 
