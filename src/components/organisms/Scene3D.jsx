@@ -91,6 +91,18 @@ export const Scene3D = ({
   const [textSizeMain, setTextSizeMain] = useState([60, 20, 6]);
   const [textSizeSub, setTextSizeSub] = useState([0, 0, 0]);
 
+  React.useEffect(() => {
+    if (!text || text.trim().length === 0) {
+      setTextSizeMain([0, 0, 0]);
+    }
+  }, [text]);
+
+  React.useEffect(() => {
+    if (!subText || subText.trim().length === 0) {
+      setTextSizeSub([0, 0, 0]);
+    }
+  }, [subText]);
+
   const scaleRatio = (textScale || 100) / 100.0;
   const letterSize = 30.0 * scaleRatio;         
   const baseH = baseHeight;        
@@ -325,19 +337,21 @@ export const Scene3D = ({
         <group ref={groupRef} scale={[innerScale, innerScale, innerScale]}>
 
           {/* ANA METİN */}
-          <Text3D
-            name="TextMain"
-            key={`main-${text}-${textDepth}-${baseHeight}-${scaleRatio}-${hasSubText}-${isItalic}-${fontFamily}`}
-            font={fontPath}
-            size={letterSize}
-            height={textDepth} // textDepth kullanılıyor
-            curveSegments={16}
-            bevelEnabled={false}
-            onUpdate={(self) => processTextGeometry(self, setTextSizeMain, -mainYOffset)}
-          >
-            {text || " "}
-            <meshStandardMaterial color={materialColor} roughness={0.4} metalness={0.1} />
-          </Text3D>
+          {text && text.trim().length > 0 && (
+            <Text3D
+              name="TextMain"
+              key={`main-${text}-${textDepth}-${baseHeight}-${scaleRatio}-${hasSubText}-${isItalic}-${fontFamily}`}
+              font={fontPath}
+              size={letterSize}
+              height={textDepth} // textDepth kullanılıyor
+              curveSegments={16}
+              bevelEnabled={false}
+              onUpdate={(self) => processTextGeometry(self, setTextSizeMain, -mainYOffset)}
+            >
+              {text}
+              <meshStandardMaterial color={materialColor} roughness={0.4} metalness={0.1} />
+            </Text3D>
+          )}
 
           {/* ALT METİN (Opsiyonel) */}
           {hasSubText && (
