@@ -6,6 +6,10 @@ import { useTranslation } from 'react-i18next';
 export const SettingsCard = ({ 
   text, setText, 
   subText, setSubText,
+  fontFamily, setFontFamily,
+  iconType, setIconType,
+  customSvgUrl, setCustomSvgUrl,
+  iconPosition, setIconPosition,
   isItalic, setIsItalic,
   textDepth, setTextDepth,
   materialColor, setMaterialColor,
@@ -63,8 +67,28 @@ export const SettingsCard = ({
         </div>
       </div>
 
-      {/* Text Inputs */}
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-5 border-b border-slate-100 pb-5">
+        {/* YAZI TİPİ (FONT) SEÇİMİ */}
+        <div className="flex flex-col gap-2">
+          <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">{t('font_family')}</label>
+          <div className="relative">
+            <select
+              value={fontFamily}
+              onChange={(e) => setFontFamily(e.target.value)}
+              className="w-full h-11 pl-4 pr-10 rounded-xl bg-slate-50 border border-slate-200 text-sm font-semibold text-slate-800 appearance-none focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all cursor-pointer"
+            >
+              <option value="optimer">Optimer (Kalın)</option>
+              <option value="helvetiker">Helvetiker (Düz/Modern)</option>
+              <option value="droid">Droid Sans (Yuvarlak)</option>
+            </select>
+            <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+            </div>
+          </div>
+        </div>
+
+        {/* Text Inputs */}
+        <div className="flex flex-col gap-4">
         <div className="flex flex-col gap-2">
           <label className="text-[11px] font-bold text-slate-500">{t('label_text')}</label>
           <input 
@@ -123,6 +147,82 @@ export const SettingsCard = ({
               {t('italic')}
             </button>
           </div>
+        </div>
+
+        {/* SİMGE (ICON) SEÇİMİ VE KONUMU */}
+        <div className="flex flex-col gap-5 pt-3 border-t border-slate-100">
+          <div className="flex flex-col gap-2">
+            <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">{t('icon')}</label>
+            <div className="relative">
+              <select
+                value={iconType}
+                onChange={(e) => {
+                  setIconType(e.target.value);
+                  if (e.target.value !== 'custom') {
+                    setCustomSvgUrl(null);
+                  }
+                }}
+                className="w-full h-11 pl-4 pr-10 rounded-xl bg-slate-50 border border-slate-200 text-sm font-semibold text-slate-800 appearance-none focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all cursor-pointer"
+              >
+                <option value="none">{t('icon_none')}</option>
+                <option value="clover">{t('icon_clover')} 🍀</option>
+                <option value="star_crescent">{t('icon_star_crescent')} 🌙</option>
+                <option value="heart">{t('icon_heart')} ❤️</option>
+                <option value="skull">{t('icon_skull')} 💀</option>
+                <option value="custom">{t('icon_custom')} 📁</option>
+              </select>
+              <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+              </div>
+            </div>
+          </div>
+
+          {/* CUSTOM SVG UPLOAD */}
+          {iconType === 'custom' && (
+            <div className="flex flex-col gap-2">
+              <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">SVG Yükle</label>
+              <input 
+                type="file" 
+                accept=".svg"
+                onChange={(e) => {
+                  const file = e.target.files[0];
+                  if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                      setCustomSvgUrl(event.target.result);
+                    };
+                    reader.readAsDataURL(file);
+                  }
+                }}
+                className="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 transition-all cursor-pointer"
+              />
+            </div>
+          )}
+
+          {/* ICON POSITION */}
+          {iconType !== 'none' && (
+            <div className="flex flex-col gap-2">
+              <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">{t('icon_position')}</label>
+              <div className="bg-slate-100/80 p-1 rounded-xl flex items-center h-11 w-full relative">
+                <button 
+                  onClick={() => setIconPosition('left')}
+                  className={`z-10 flex-1 text-[11px] font-bold tracking-wider rounded-lg h-full transition-colors ${
+                    iconPosition === 'left' ? 'bg-white shadow-sm text-slate-800' : 'text-slate-400 hover:text-slate-600'
+                  }`}
+                >
+                  {t('icon_pos_left')}
+                </button>
+                <button 
+                  onClick={() => setIconPosition('right')}
+                  className={`z-10 flex-1 text-[11px] font-bold tracking-wider rounded-lg h-full transition-colors ${
+                    iconPosition === 'right' ? 'bg-white shadow-sm text-slate-800' : 'text-slate-400 hover:text-slate-600'
+                  }`}
+                >
+                  {t('icon_pos_right')}
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
@@ -296,5 +396,6 @@ export const SettingsCard = ({
       </div>
 
     </div>
+  </div>
   );
 };

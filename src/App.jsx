@@ -10,6 +10,10 @@ const App = () => {
   const [text, setText] = useState('YM2KY');
   const [subText, setSubText] = useState(''); // Alt Metin
   const [isItalic, setIsItalic] = useState(false); // İtalik Yazı
+  const [fontFamily, setFontFamily] = useState('optimer'); // optimer, helvetiker, droid
+  const [iconType, setIconType] = useState('none'); // none, clover, star_crescent, skull, heart, custom
+  const [customSvgUrl, setCustomSvgUrl] = useState(null); // Özel SVG Data URL
+  const [iconPosition, setIconPosition] = useState('left'); // left, right
   const [textDepth, setTextDepth] = useState(2.0); // Yazı kalınlığı (mm)
   const [materialColor, setMaterialColor] = useState('#22C55E'); // Yazı Rengi
   const [baseColor, setBaseColor] = useState('#0F172A'); // Taban Rengi
@@ -82,6 +86,14 @@ const App = () => {
             setText={setText}
             subText={subText}
             setSubText={setSubText}
+            fontFamily={fontFamily}
+            setFontFamily={setFontFamily}
+            iconType={iconType}
+            setIconType={setIconType}
+            customSvgUrl={customSvgUrl}
+            setCustomSvgUrl={setCustomSvgUrl}
+            iconPosition={iconPosition}
+            setIconPosition={setIconPosition}
             isItalic={isItalic}
             setIsItalic={setIsItalic}
             textDepth={textDepth}
@@ -140,6 +152,10 @@ const App = () => {
               <Scene3D 
                 text={text} 
                 subText={subText}
+                fontFamily={fontFamily}
+                iconType={iconType}
+                customSvgUrl={customSvgUrl}
+                iconPosition={iconPosition}
                 isItalic={isItalic}
                 textDepth={textDepth}
                 groupRef={groupRef}
