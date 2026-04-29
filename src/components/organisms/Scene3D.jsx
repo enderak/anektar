@@ -333,7 +333,7 @@ export const Scene3D = ({
           {text && text.trim().length > 0 && (
             <Text3D
               name="TextMain"
-              key={`main-${text}-${textDepth}-${baseHeight}-${scaleRatio}-${hasSubText}-${isItalic}-${fontFamily}`}
+              key={`main-${text}-${textDepth}-${baseHeight}-${scaleRatio}-${hasSubText}-${isItalic}-${fontFamily}-${hasIcon}`}
               font={fontPath}
               size={letterSize}
               height={textDepth} // textDepth kullanılıyor
@@ -350,7 +350,7 @@ export const Scene3D = ({
           {hasSubText && (
             <Text3D
               name="TextSub"
-              key={`sub-${subText}-${textDepth}-${baseHeight}-${scaleRatio}-${isItalic}-${fontFamily}`}
+              key={`sub-${subText}-${textDepth}-${baseHeight}-${scaleRatio}-${isItalic}-${fontFamily}-${hasIcon}`}
               font={fontPath}
               size={letterSize}
               height={textDepth} 
