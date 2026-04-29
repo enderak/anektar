@@ -100,17 +100,17 @@ const createHeartBaseShape = (width, depth, holeConfig) => {
   
   for (let i = 0; i < pts.length; i++) {
     const px = (pts[i].x - rawCx) * uniformScale;
-    const py = (pts[i].y - rawCy) * uniformScale;
+    const py = -(pts[i].y - rawCy) * uniformScale; // Y ters çevir: tepeler yukarı, sivri uç aşağı
     if (i === 0) shape.moveTo(px, py);
     else shape.lineTo(px, py);
   }
   shape.closePath();
   
-  // Delik: iki tepe arasındaki çukura (scaled center top)
+  // Delik: iki tepe arasındaki çukura (üst orta)
   if (holeConfig) {
     const holePath = new THREE.Path();
-    // Çukur noktası: raw (5, 5) -> centered (0, (5-9.5)*scale) = (0, -4.5*scale)
-    const holeY = (5 - rawCy) * uniformScale;
+    // Çukur noktası: raw (5, 5) -> flipped: (0, +(9.5-5)*scale) = üst orta
+    const holeY = (rawCy - 5) * uniformScale;
     holePath.absarc(0, holeY, holeConfig.r, 0, Math.PI * 2, true);
     shape.holes.push(holePath);
   }
