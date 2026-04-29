@@ -70,28 +70,44 @@ const createTeardropShape = (width, depth, isLeft, holeConfig) => {
 // Kalp taban şekli
 const createHeartBaseShape = (width, depth, holeConfig) => {
   const shape = new THREE.Shape();
-  // Kalbin genişliği ve yüksekliği baseW/baseD'ye uyacak şekilde ölçekle
-  const sx = width / 2;  // X ekseni yarı genişlik
-  const sy = depth / 2;  // Y ekseni yarı yükseklik
   
-  // Kalp üst noktası (çukur kısım) - Y ekseninde yukarı
-  shape.moveTo(0, sy * 0.55);
+  // Kalp kendi oranını korumalı, yazıyı içine alacak kadar büyük olmalı
+  // Kalbin kullanılabilir iç alanı yaklaşık %60'ı, geri kalanı kavisler
+  const neededSize = Math.max(width, depth) * 0.85;
+  const s = neededSize;
   
-  // Sağ üst kavis (sağ tepe)
-  shape.bezierCurveTo(sx * 0.1, sy * 0.95, sx * 0.65, sy * 1.05, sx * 0.95, sy * 0.55);
-  // Sağ alt (aşağıya doğru kıvrım)
-  shape.bezierCurveTo(sx * 1.1, sy * 0.05, sx * 0.3, -sy * 0.55, 0, -sy);
-  // Sol alt  
-  shape.bezierCurveTo(-sx * 0.3, -sy * 0.55, -sx * 1.1, sy * 0.05, -sx * 0.95, sy * 0.55);
-  // Sol üst kavis (sol tepe)
-  shape.bezierCurveTo(-sx * 0.65, sy * 1.05, -sx * 0.1, sy * 0.95, 0, sy * 0.55);
+  // Klasik kalp şekli — üstte iki tepe, altta sivri uç
+  // Başlangıç: üst orta çukur
+  shape.moveTo(0, s * 0.35);
   
-  // Delik: Kalp şeklinde delik her zaman üst orta noktaya (iki tepe arasındaki çukura) yerleşir
+  // Sağ üst tepe
+  shape.bezierCurveTo(
+    s * 0.15, s * 0.65,   // kontrol 1
+    s * 0.55, s * 0.8,    // kontrol 2  
+    s * 0.55, s * 0.4     // bitiş: sağ tepenin alt kısmı
+  );
+  shape.bezierCurveTo(
+    s * 0.55, s * 0.05,   // kontrol 1
+    s * 0.25, -s * 0.25,  // kontrol 2
+    0, -s * 0.55          // bitiş: alt sivri uç
+  );
+  
+  // Sol üst tepe (simetrik)
+  shape.bezierCurveTo(
+    -s * 0.25, -s * 0.25, // kontrol 1
+    -s * 0.55, s * 0.05,  // kontrol 2
+    -s * 0.55, s * 0.4    // bitiş: sol tepenin alt kısmı
+  );
+  shape.bezierCurveTo(
+    -s * 0.55, s * 0.8,   // kontrol 1
+    -s * 0.15, s * 0.65,  // kontrol 2
+    0, s * 0.35           // bitiş: üst orta çukur
+  );
+  
+  // Delik: iki tepe arasındaki çukura
   if (holeConfig) {
     const holePath = new THREE.Path();
-    // Deliği kalbin üst-orta çukuruna koy
-    const holeY = sy * 0.55;
-    holePath.absarc(0, holeY, holeConfig.r, 0, Math.PI * 2, true);
+    holePath.absarc(0, s * 0.35, holeConfig.r, 0, Math.PI * 2, true);
     shape.holes.push(holePath);
   }
   
