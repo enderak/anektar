@@ -204,7 +204,7 @@ export const Scene3D = ({
   const maxTextWidth = Math.max(textSizeMain[0], textSizeSub[0]);
   
   const iconRealSize = hasIcon ? (letterSize * iconScale) : 0;
-  const iconTotalWidth = hasIcon ? (iconRealSize + 22.0) : 0; // Toplam boşluk payını 15'ten 22'ye çıkardım (Daha ferah bir görünüm için)
+  const iconTotalWidth = hasIcon ? (iconRealSize + 30.0) : 0; // Toplam boşluk payını 22'den 30'a çıkardım (Kalp için ekstra yer)
   
   let baseW = maxTextWidth + pLeft + pRight + iconTotalWidth;
   
@@ -271,7 +271,7 @@ export const Scene3D = ({
     const textShiftDir = iconPosition === 'left' ? 1 : -1;
     const iconDir = iconPosition === 'left' ? -1 : 1;
     // Yazının merkezinden dışarı doğru itme: maxTextWidth/2 + boşluk + simgenin yarısı
-    const spacing = 15.0; // Yazı ile simge arasındaki net boşluğu 10'dan 15'e çıkardım
+    const spacing = 20.0; // Yazı ile simge arasındaki net boşluğu 15'ten 20'ye çıkardım
     const offsetFromCenter = (maxTextWidth / 2) + spacing + (iconRealSize / 2);
     return baseCenterX + iconDir * offsetFromCenter + textShiftDir * (iconTotalWidth / 2);
   }, [hasIcon, iconPosition, baseCenterX, maxTextWidth, iconRealSize, iconTotalWidth]);
