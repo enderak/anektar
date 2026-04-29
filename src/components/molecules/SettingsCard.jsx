@@ -43,6 +43,9 @@ export const SettingsCard = ({
           {[
             { code: 'TR', name: 'TÜRKÇE' },
             { code: 'EN', name: 'ENGLISH' },
+            { code: 'DE', name: 'DEUTSCH' },
+            { code: 'AZ', name: 'AZƏRBAYCAN' },
+            { code: 'ES', name: 'ESPAÑOL' }
           ].map((lang) => (
             <button
               key={lang.code}
