@@ -11,7 +11,7 @@ const resources = {
       "label_text": "Ana Metin",
       "sub_text": "Alt Metin (Opsiyonel)",
       "placeholder": "Örn: YONCALI",
-      "placeholder_sub": "Örn: MOBİLYA",
+      "placeholder_sub": "Örn: TA2NLE",
       "hole_position": "Delik Konumu",
       "hole_top_left": "Üst Sol",
       "hole_center_left": "Orta Sol",
