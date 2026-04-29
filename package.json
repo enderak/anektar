@@ -9,7 +9,6 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@react-three/csg": "^4.0.0",
     "@react-three/drei": "^9.88.0",
     "@react-three/fiber": "^8.15.0",
     "i18next": "^26.0.1",

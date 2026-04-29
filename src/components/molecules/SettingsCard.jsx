@@ -6,7 +6,6 @@ import { useTranslation } from 'react-i18next';
 export const SettingsCard = ({ 
   text, setText, 
   subText, setSubText,
-  textMode, setTextMode,
   textDepth, setTextDepth,
   materialColor, setMaterialColor,
   baseColor, setBaseColor,
@@ -83,37 +82,8 @@ export const SettingsCard = ({
         </div>
       </div>
 
-      {/* YENİ: Yazı Tipi (Mod) ve Derinlik */}
+      {/* Yazı Derinliği (Çıkıntı yüksekliği) */}
       <div className="flex flex-col gap-4 mt-2">
-        {/* Yazı Modu (Emboss vs Engrave) */}
-        <div className="flex flex-col gap-2">
-          <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">{t('text_mode')}</label>
-          <div className="bg-slate-100/80 p-1 rounded-xl flex items-center h-11 w-full relative">
-            <div 
-              className={`absolute top-1 bottom-1 w-[calc(50%-4px)] bg-white rounded-lg shadow-sm transition-transform duration-300 ease-in-out ${
-                textMode === 'engrave' ? 'translate-x-[calc(100%+4px)]' : 'translate-x-0'
-              }`}
-            />
-            <button 
-              onClick={() => setTextMode('emboss')}
-              className={`z-10 flex-1 text-[11px] font-bold tracking-wider rounded-lg h-full transition-colors ${
-                textMode === 'emboss' ? 'text-slate-800' : 'text-slate-400 hover:text-slate-600'
-              }`}
-            >
-              {t('mode_emboss')}
-            </button>
-            <button 
-              onClick={() => setTextMode('engrave')}
-              className={`z-10 flex-1 text-[11px] font-bold tracking-wider rounded-lg h-full transition-colors ${
-                textMode === 'engrave' ? 'text-slate-800' : 'text-slate-400 hover:text-slate-600'
-              }`}
-            >
-              {t('mode_engrave')}
-            </button>
-          </div>
-        </div>
-
-        {/* Yazı Derinliği (Çıkıntı veya Oyuk derinliği) */}
         <div className="flex flex-col gap-3">
           <div className="flex justify-between items-center text-[10px] font-bold text-slate-500">
             <span>{t('text_depth')}</span>
@@ -230,7 +200,7 @@ export const SettingsCard = ({
           </div>
           <input 
             type="range" 
-            min="40" max="150" step="1"
+            min="20" max="150" step="1"
             value={textScale}
             onChange={(e) => setTextScale(parseInt(e.target.value))}
             className="w-full h-1 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-emerald-600 outline-none"

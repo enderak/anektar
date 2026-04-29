@@ -9,8 +9,7 @@ import { useTranslation } from 'react-i18next';
 const App = () => {
   const [text, setText] = useState('YM2KY');
   const [subText, setSubText] = useState(''); // Alt Metin
-  const [textMode, setTextMode] = useState('emboss'); // 'emboss' (Çıkıntılı) veya 'engrave' (Gömülü)
-  const [textDepth, setTextDepth] = useState(2.0); // Derinlik veya Çıkıntı yüksekliği (mm)
+  const [textDepth, setTextDepth] = useState(2.0); // Yazı kalınlığı (mm)
   const [materialColor, setMaterialColor] = useState('#22C55E'); // Yazı Rengi
   const [baseColor, setBaseColor] = useState('#0F172A'); // Taban Rengi
   const [baseShape, setBaseShape] = useState('rectangle'); // Taban Şekli
@@ -82,8 +81,6 @@ const App = () => {
             setText={setText}
             subText={subText}
             setSubText={setSubText}
-            textMode={textMode}
-            setTextMode={setTextMode}
             textDepth={textDepth}
             setTextDepth={setTextDepth}
             materialColor={materialColor}
@@ -104,7 +101,7 @@ const App = () => {
             setBaseHeight={setBaseHeight}
             targetWidth={targetWidth}
             setTargetWidth={setTargetWidth}
-            onExport={(isMultiColor) => handleExport(groupRef, text, isMultiColor, textMode)}
+            onExport={(isMultiColor) => handleExport(groupRef, text, isMultiColor)}
           />
 
         </div>
@@ -140,7 +137,6 @@ const App = () => {
               <Scene3D 
                 text={text} 
                 subText={subText}
-                textMode={textMode}
                 textDepth={textDepth}
                 groupRef={groupRef}
                 materialColor={materialColor}
