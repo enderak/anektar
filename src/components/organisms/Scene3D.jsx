@@ -114,7 +114,8 @@ export const Scene3D = ({
     const matrix = new THREE.Matrix4();
     if (isItalic) {
       const angle = Math.tan(THREE.MathUtils.degToRad(12)); 
-      matrix.makeShear(angle, 0, 0); 
+      // xy, xz, yx, yz, zx, zy
+      matrix.makeShear(angle, 0, 0, 0, 0, 0); 
     }
     return matrix;
   }, [isItalic]);
