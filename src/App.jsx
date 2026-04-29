@@ -119,6 +119,17 @@ const App = () => {
             onExport={(isMultiColor) => handleExport(groupRef, text, isMultiColor)}
           />
 
+          {/* AMS Bilgi Kutusu */}
+          <div className="flex flex-col gap-3 w-full max-w-sm">
+            <div className="bg-emerald-50 p-4 rounded-xl shadow-sm border border-emerald-100/50 flex gap-3 text-sm text-emerald-800/80">
+              <span className="text-lg shrink-0 mt-0.5">🎨</span>
+              <p className="leading-tight text-[12px]">
+                <strong className="block mb-1 text-emerald-900">{t('ams_tip_title')}</strong>
+                {t('ams_tip')}
+              </p>
+            </div>
+          </div>
+
         </div>
 
         {/* Right Column: 3D Canvas */}
