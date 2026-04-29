@@ -70,23 +70,28 @@ const createTeardropShape = (width, depth, isLeft, holeConfig) => {
 // Kalp taban şekli
 const createHeartBaseShape = (width, depth, holeConfig) => {
   const shape = new THREE.Shape();
-  const s = Math.min(width, depth) / 2;
+  // Kalbin genişliği ve yüksekliği baseW/baseD'ye uyacak şekilde ölçekle
+  const sx = width / 2;  // X ekseni yarı genişlik
+  const sy = depth / 2;  // Y ekseni yarı yükseklik
   
-  // Kalp üst noktası (çukur kısım)
-  shape.moveTo(0, s * 0.6);
+  // Kalp üst noktası (çukur kısım) - Y ekseninde yukarı
+  shape.moveTo(0, sy * 0.55);
   
-  // Sağ üst kavis
-  shape.bezierCurveTo(s * 0.1, s * 0.95, s * 0.7, s * 1.1, s, s * 0.6);
-  // Sağ alt
-  shape.bezierCurveTo(s * 1.2, s * 0.1, s * 0.3, -s * 0.5, 0, -s);
+  // Sağ üst kavis (sağ tepe)
+  shape.bezierCurveTo(sx * 0.1, sy * 0.95, sx * 0.65, sy * 1.05, sx * 0.95, sy * 0.55);
+  // Sağ alt (aşağıya doğru kıvrım)
+  shape.bezierCurveTo(sx * 1.1, sy * 0.05, sx * 0.3, -sy * 0.55, 0, -sy);
   // Sol alt  
-  shape.bezierCurveTo(-s * 0.3, -s * 0.5, -s * 1.2, s * 0.1, -s, s * 0.6);
-  // Sol üst kavis
-  shape.bezierCurveTo(-s * 0.7, s * 1.1, -s * 0.1, s * 0.95, 0, s * 0.6);
+  shape.bezierCurveTo(-sx * 0.3, -sy * 0.55, -sx * 1.1, sy * 0.05, -sx * 0.95, sy * 0.55);
+  // Sol üst kavis (sol tepe)
+  shape.bezierCurveTo(-sx * 0.65, sy * 1.05, -sx * 0.1, sy * 0.95, 0, sy * 0.55);
   
+  // Delik: Kalp şeklinde delik her zaman üst orta noktaya (iki tepe arasındaki çukura) yerleşir
   if (holeConfig) {
     const holePath = new THREE.Path();
-    holePath.absarc(holeConfig.x, holeConfig.y, holeConfig.r, 0, Math.PI * 2, true);
+    // Deliği kalbin üst-orta çukuruna koy
+    const holeY = sy * 0.55;
+    holePath.absarc(0, holeY, holeConfig.r, 0, Math.PI * 2, true);
     shape.holes.push(holePath);
   }
   
