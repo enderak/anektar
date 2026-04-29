@@ -91,6 +91,16 @@ export const Scene3D = ({
 
   const hasSubText = subText && subText.trim().length > 0;
   
+  // Italik için Shear Matrisi
+  const shearMatrix = useMemo(() => {
+    const matrix = new THREE.Matrix4();
+    if (isItalic) {
+      const angle = Math.tan(THREE.MathUtils.degToRad(12)); 
+      matrix.makeShear(angle, 0, 0); 
+    }
+    return matrix;
+  }, [isItalic]);
+
   // Y ekseni (3D Z ekseni) metin yerleşimi
   const lineSpacing = letterSize * 1.3;
   const mainYOffset = hasSubText ? (lineSpacing / 2) : 0;
@@ -181,6 +191,10 @@ export const Scene3D = ({
       // Z ekseninde yerleşim
       self.geometry.translate(baseCenterX, baseH, yOffset);
 
+      if (isItalic) {
+        self.geometry.applyMatrix4(shearMatrix);
+      }
+
       self.geometry.computeVertexNormals();
       self.geometry.computeBoundingBox();
       self.geometry.userData.morphed = true;
@@ -214,7 +228,7 @@ export const Scene3D = ({
           <Text3D
             name="TextMain"
             key={`main-${text}-${textDepth}-${baseHeight}-${scaleRatio}-${hasSubText}-${isItalic}-optimer`}
-            font={isItalic ? "/fonts/optimer_italic.typeface.json" : "/fonts/optimer_bold.typeface.json"}
+            font="/fonts/optimer_bold.typeface.json"
             size={letterSize}
             height={textDepth} // textDepth kullanılıyor
             curveSegments={16}
@@ -230,7 +244,7 @@ export const Scene3D = ({
             <Text3D
               name="TextSub"
               key={`sub-${subText}-${textDepth}-${baseHeight}-${scaleRatio}-${isItalic}-optimer`}
-              font={isItalic ? "/fonts/optimer_italic.typeface.json" : "/fonts/optimer_bold.typeface.json"}
+              font="/fonts/optimer_bold.typeface.json"
               size={letterSize}
               height={textDepth} // textDepth kullanılıyor
               curveSegments={16}

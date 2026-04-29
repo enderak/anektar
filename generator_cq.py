@@ -49,9 +49,6 @@ pah_miktari     = args.chamfer
 font_adi        = args.font
 output_file     = args.output
 
-if is_italic and font_adi == "optimer_bold":
-    font_adi = "optimer_italic"
-
 scale_ratio = text_scale / 100.0
 yazi_boyutu = base_font_size * scale_ratio
 yazi_kalinlik = text_depth
@@ -177,7 +174,7 @@ try:
     text_3d = (
         cq.Workplane("XY")
         .translate((base_center_x, main_y_offset, z_pos))
-        .text(metin, yazi_boyutu, yazi_kalinlik, font=font_adi, kind="bold", halign="center", valign="center")
+        .text(metin, yazi_boyutu, yazi_kalinlik, font=font_adi, kind="italic" if is_italic else "bold", halign="center", valign="center")
     )
     
     # 2. SATIR
@@ -185,7 +182,7 @@ try:
         sub_text_3d = (
             cq.Workplane("XY")
             .translate((base_center_x, sub_y_offset, z_pos))
-            .text(alt_metin, yazi_boyutu, yazi_kalinlik, font=font_adi, kind="bold", halign="center", valign="center")
+            .text(alt_metin, yazi_boyutu, yazi_kalinlik, font=font_adi, kind="italic" if is_italic else "bold", halign="center", valign="center")
         )
         text_3d = text_3d.union(sub_text_3d)
 
