@@ -204,7 +204,7 @@ export const Scene3D = ({
   const maxTextWidth = Math.max(textSizeMain[0], textSizeSub[0]);
   
   const iconRealSize = hasIcon ? (letterSize * iconScale) : 0;
-  const iconTotalWidth = hasIcon ? (iconRealSize + 8.0) : 0; // Boşluğu 4'ten 8'e çıkardım
+  const iconTotalWidth = hasIcon ? (iconRealSize + 15.0) : 0; // Boşluğu 8'den 15'e çıkardım (Yazıya değmemesi için garanti payı)
   
   let baseW = maxTextWidth + pLeft + pRight + iconTotalWidth;
   
@@ -270,8 +270,10 @@ export const Scene3D = ({
     if (!hasIcon) return 0;
     const textShiftDir = iconPosition === 'left' ? 1 : -1;
     const iconDir = iconPosition === 'left' ? -1 : 1;
-    // iconRealSize * 0.75 yaparak yazıdan biraz daha uzaklaştırdım (önceden 0.6 idi)
-    return baseCenterX + iconDir * (maxTextWidth / 2 + iconRealSize * 0.75) + textShiftDir * (iconTotalWidth / 2);
+    // Yazının merkezinden dışarı doğru itme: maxTextWidth/2 + boşluk + simgenin yarısı
+    const spacing = 10.0; // Yazı ile simge arasındaki net boşluk
+    const offsetFromCenter = (maxTextWidth / 2) + spacing + (iconRealSize / 2);
+    return baseCenterX + iconDir * offsetFromCenter + textShiftDir * (iconTotalWidth / 2);
   }, [hasIcon, iconPosition, baseCenterX, maxTextWidth, iconRealSize, iconTotalWidth]);
 
   const processTextGeometry = (self, setSizeFunc, yOffset) => {
