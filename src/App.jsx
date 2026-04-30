@@ -70,7 +70,7 @@ const App = () => {
                 </div>
               </div>
               <div className="text-[11px] font-extrabold tracking-widest text-slate-800 max-w-[300px] leading-tight mt-1">
-                SAKARYA AMATÖR TELSİZCİLER VE RADYO AMATÖRLERİ DERNEĞİ
+                SAKARYA TELSİZ VE RADYO AMATÖRLERİ ELEKTRONİK HABERLEŞME TEKNOLOJİLERİ DERNEĞİ
               </div>
             </a>
             
