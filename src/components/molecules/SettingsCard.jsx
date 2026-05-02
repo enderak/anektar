@@ -26,6 +26,21 @@ export const SettingsCard = ({
 }) => {
   const { t, i18n } = useTranslation();
 
+  const replaceTurkishChars = (str) => {
+    return str.replace(/Ğ/g, 'G')
+              .replace(/Ü/g, 'U')
+              .replace(/Ş/g, 'S')
+              .replace(/İ/g, 'I')
+              .replace(/Ö/g, 'O')
+              .replace(/Ç/g, 'C')
+              .replace(/ğ/g, 'g')
+              .replace(/ü/g, 'u')
+              .replace(/ş/g, 's')
+              .replace(/ı/g, 'i')
+              .replace(/ö/g, 'o')
+              .replace(/ç/g, 'c');
+  };
+
   const colors = [
     { value: '#22C55E', label: 'Sakarya Green' }, 
     { value: '#0F172A', label: 'Sakarya Black' }, 
@@ -93,7 +108,7 @@ export const SettingsCard = ({
           <label className="text-[11px] font-bold text-slate-500">{t('label_text')}</label>
           <input 
             value={text}
-            onChange={(e) => setText(e.target.value.toLocaleUpperCase('tr-TR'))}
+            onChange={(e) => setText(replaceTurkishChars(e.target.value).toLocaleUpperCase('en-US'))}
             className="w-full bg-white border border-slate-200/80 text-sm font-bold text-slate-800 py-2.5 px-4 rounded-xl outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-50/50 transition-all shadow-sm"
             placeholder={t('placeholder')}
           />
@@ -103,7 +118,7 @@ export const SettingsCard = ({
           <label className="text-[11px] font-bold text-slate-500">{t('sub_text')}</label>
           <input 
             value={subText}
-            onChange={(e) => setSubText(e.target.value.toLocaleUpperCase('tr-TR'))}
+            onChange={(e) => setSubText(replaceTurkishChars(e.target.value).toLocaleUpperCase('en-US'))}
             className="w-full bg-white border border-slate-200/80 text-sm font-bold text-slate-800 py-2.5 px-4 rounded-xl outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-50/50 transition-all shadow-sm"
             placeholder={t('placeholder_sub')}
           />
