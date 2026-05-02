@@ -410,8 +410,16 @@ export const SettingsCard = ({
 
       </div>
 
+      {/* Bilgilendirme Notu */}
+      <div className="bg-amber-50 border border-amber-200/60 rounded-xl p-3 flex items-start gap-2 mt-1">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-amber-500 shrink-0 mt-0.5"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+        <p className="text-[10px] text-amber-800 font-medium leading-relaxed">
+          <strong className="font-bold">Not:</strong> Delik konumu veya simge yönü değiştiğinde modelin dengesi için <span className="font-bold">Yazı Boyutu</span> değişikliği yapılması gerekebilir.
+        </p>
+      </div>
+
       {/* Export Buttons */}
-      <div className="flex flex-row gap-3 mt-4">
+      <div className="flex flex-row gap-3 mt-2">
         <button 
           onClick={() => onExport(false)}
           className="flex-1 bg-[#059669] hover:bg-emerald-700 active:bg-emerald-800 text-white shadow-lg shadow-emerald-500/20 py-3.5 px-2 rounded-xl font-bold flex flex-col items-center justify-center gap-1 transition-all active:scale-95 text-[11px] text-center"
