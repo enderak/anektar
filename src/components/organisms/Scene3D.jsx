@@ -457,45 +457,49 @@ export const Scene3D = ({
 
           {/* I LOVE TITLE (Extra) */}
           {isILoveMode && iLoveShape && (
-            <mesh 
+            <group 
               key={`ilove-${textDepth}-${baseHeight}-${scaleRatio}-${isItalic}-${letterSize}`}
-              name="ILoveIcon"
               position={[iLoveX, baseH, iLoveZ]}
               rotation={[-Math.PI / 2, 0, 0]}
               scale={[1, 1, 1]}
             >
               {iLoveShape.map((shape, idx) => (
-                <mesh key={idx}>
+                <mesh key={idx} name={`ILoveIcon_${idx}`}>
                   <extrudeGeometry args={[shape, { depth: textDepth, bevelEnabled: false }]} />
                   <meshStandardMaterial color={idx === 1 ? '#EF4444' : materialColor} roughness={0.4} metalness={0.1} />
                 </mesh>
               ))}
-            </mesh>
+            </group>
           )}
 
           {/* SİMGE (ICON) */}
           {hasIcon && (
-            <mesh 
-              key={`icon-${iconType}-${textDepth}-${baseHeight}-${scaleRatio}-${isItalic}-${iconPosition}-${letterSize}`}
-              name="TextIcon"
-              position={[iconX, baseH, iconZ]}
-              rotation={[-Math.PI / 2, 0, 0]}
-              scale={[iconScale, iconScale, 1]}
-            >
-              {Array.isArray(iconShape) ? (
-                iconShape.map((shape, idx) => (
-                  <mesh key={idx}>
+            Array.isArray(iconShape) ? (
+              <group
+                key={`icon-${iconType}-${textDepth}-${baseHeight}-${scaleRatio}-${isItalic}-${iconPosition}-${letterSize}`}
+                position={[iconX, baseH, iconZ]}
+                rotation={[-Math.PI / 2, 0, 0]}
+                scale={[iconScale, iconScale, 1]}
+              >
+                {iconShape.map((shape, idx) => (
+                  <mesh key={idx} name={`TextIcon_${idx}`}>
                     <extrudeGeometry args={[shape, { depth: textDepth, bevelEnabled: false }]} />
                     <meshStandardMaterial color={materialColor} roughness={0.4} metalness={0.1} />
                   </mesh>
-                ))
-              ) : (
+                ))}
+              </group>
+            ) : (
+              <mesh 
+                key={`icon-${iconType}-${textDepth}-${baseHeight}-${scaleRatio}-${isItalic}-${iconPosition}-${letterSize}`}
+                name="TextIcon"
+                position={[iconX, baseH, iconZ]}
+                rotation={[-Math.PI / 2, 0, 0]}
+                scale={[iconScale, iconScale, 1]}
+              >
                 <extrudeGeometry args={[iconShape, { depth: textDepth, bevelEnabled: false }]} />
-              )}
-              {!Array.isArray(iconShape) && (
                 <meshStandardMaterial color={materialColor} roughness={0.4} metalness={0.1} />
-              )}
-            </mesh>
+              </mesh>
+            )
           )}
 
           {/* TABAN PLAKASI */}

@@ -47,8 +47,8 @@ export const handleExport = (groupRef, fileName = "SAKRAD_Isimlik", isMultiColor
     const baseResult = exporter.parse(groupRef.current, { binary: true });
     zip.file(`${fileName}_TABAN.stl`, baseResult instanceof ArrayBuffer ? baseResult : baseResult.buffer || baseResult);
 
-    // 2. SADECE YAZILARI AKTAR (Text*, ILove* isimli meshler)
-    groupRef.current.children = allChildren.filter(c => c.name && (c.name.startsWith("Text") || c.name.startsWith("ILove")));
+    // 2. SADECE YAZILARI AKTAR (Text*, ILove*, TextIcon* isimli meshler)
+    groupRef.current.children = allChildren.filter(c => c.name && c.name !== 'BasePlate');
     groupRef.current.updateMatrixWorld(true);
     const textResult = exporter.parse(groupRef.current, { binary: true });
     zip.file(`${fileName}_YAZI.stl`, textResult instanceof ArrayBuffer ? textResult : textResult.buffer || textResult);
