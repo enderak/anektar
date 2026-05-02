@@ -42,16 +42,16 @@ export const handleExport = (groupRef, fileName = "SAKRAD_Isimlik", isMultiColor
     const allChildren = [...groupRef.current.children];
 
     // 1. SADECE TABANI AKTAR
-    groupRef.current.children = allChildren.filter(c => !c.name || !c.name.startsWith("Text"));
+    groupRef.current.children = allChildren.filter(c => !c.name || c.name === 'BasePlate');
     groupRef.current.updateMatrixWorld(true);
     const baseResult = exporter.parse(groupRef.current, { binary: true });
-    zip.file(`${fileName}_TABAN.stl`, baseResult.buffer);
+    zip.file(`${fileName}_TABAN.stl`, baseResult instanceof ArrayBuffer ? baseResult : baseResult.buffer || baseResult);
 
-    // 2. SADECE YAZILARI AKTAR
-    groupRef.current.children = allChildren.filter(c => c.name && c.name.startsWith("Text"));
+    // 2. SADECE YAZILARI AKTAR (Text*, ILove* isimli meshler)
+    groupRef.current.children = allChildren.filter(c => c.name && (c.name.startsWith("Text") || c.name.startsWith("ILove")));
     groupRef.current.updateMatrixWorld(true);
     const textResult = exporter.parse(groupRef.current, { binary: true });
-    zip.file(`${fileName}_YAZI.stl`, textResult.buffer);
+    zip.file(`${fileName}_YAZI.stl`, textResult instanceof ArrayBuffer ? textResult : textResult.buffer || textResult);
 
     // Çocukları eski haline getir
     groupRef.current.children = allChildren;
@@ -63,9 +63,15 @@ export const handleExport = (groupRef, fileName = "SAKRAD_Isimlik", isMultiColor
 
   } else {
     // Binary format daha az yer kaplar ve 3D yazıcılar için idealdir
-    const result = exporter.parse(groupRef.current, { binary: true });
-    const blob = new Blob([result], { type: 'application/octet-stream' });
-    downloadBlob(blob, `${fileName}_${new Date().getTime()}.stl`);
+    try {
+      const result = exporter.parse(groupRef.current, { binary: true });
+      const buffer = result instanceof ArrayBuffer ? result : (result.buffer || result);
+      const blob = new Blob([buffer], { type: 'application/octet-stream' });
+      downloadBlob(blob, `${fileName}_${new Date().getTime()}.stl`);
+    } catch (err) {
+      console.error('STL Export Error:', err);
+      alert('STL dışa aktarma hatası: ' + err.message);
+    }
   }
 
   // Tekrar eski görsel boyutuna ve açısına geri al
