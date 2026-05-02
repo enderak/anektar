@@ -203,6 +203,8 @@ export const Scene3D = ({
   const mainYOffset = hasSubText ? (lineSpacing / 2) : 0;
   const subYOffset = hasSubText ? -(lineSpacing / 2) : 0;
 
+  const isLeft = holePosition.includes('left');
+  const isRight = holePosition.includes('right');
   const pLeft = isLeft ? 24.0 : 10.0;
   const pRight = isRight ? 24.0 : 10.0;
   const pTop = 12.0;
