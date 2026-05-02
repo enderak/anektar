@@ -261,6 +261,16 @@ export const Scene3D = ({
   const scaledBaseW = baseW * innerScale;
   const scaledBaseD = baseD * innerScale;
 
+  const iconX = useMemo(() => {
+    if (!hasIcon) return 0;
+    const textShiftDir = iconPosition === 'left' ? 1 : -1;
+    const iconDir = iconPosition === 'left' ? -1 : 1;
+    // Yazının merkezinden dışarı doğru itme: maxTextWidth/2 + boşluk + simgenin yarısı
+    const spacing = 3.0; // Yazı ile simge arasındaki net boşluğu 6'dan 3'e indirdim (Daha sıkı durması için)
+    const offsetFromCenter = (maxTextWidth / 2) + spacing + (iconRealSize / 2);
+    return baseCenterX + iconDir * offsetFromCenter + textShiftDir * (iconTotalWidth / 2);
+  }, [hasIcon, iconPosition, baseCenterX, maxTextWidth, iconRealSize, iconTotalWidth]);
+
   // Taban şekli seçimi
   const baseShape = useMemo(() => {
     if (selectedShape === 'contour' && loadedFont) {
@@ -294,15 +304,7 @@ export const Scene3D = ({
     }
   }, [selectedShape, baseW, baseD, isLeft, holeX, holeZ, holeR]);
 
-  const iconX = useMemo(() => {
-    if (!hasIcon) return 0;
-    const textShiftDir = iconPosition === 'left' ? 1 : -1;
-    const iconDir = iconPosition === 'left' ? -1 : 1;
-    // Yazının merkezinden dışarı doğru itme: maxTextWidth/2 + boşluk + simgenin yarısı
-    const spacing = 3.0; // Yazı ile simge arasındaki net boşluğu 6'dan 3'e indirdim (Daha sıkı durması için)
-    const offsetFromCenter = (maxTextWidth / 2) + spacing + (iconRealSize / 2);
-    return baseCenterX + iconDir * offsetFromCenter + textShiftDir * (iconTotalWidth / 2);
-  }, [hasIcon, iconPosition, baseCenterX, maxTextWidth, iconRealSize, iconTotalWidth]);
+
 
   const processTextGeometry = (self, setSizeFunc, yOffset) => {
     if (!self.geometry.userData.morphed) {
