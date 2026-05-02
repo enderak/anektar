@@ -1,8 +1,6 @@
-// src/utils/exportUtils.js — v4.0.0-sweep-update
+// src/utils/exportUtils.js — v5.0.0 (3-file AMS export)
 import { STLExporter } from 'three/examples/jsm/exporters/STLExporter';
 import JSZip from 'jszip';
-
-const MAX_STL_SIZE_MB = 50; // Maksimum STL dosya boyutu
 
 function downloadBlob(blob, filename) {
   const link = document.createElement('a');
@@ -22,51 +20,72 @@ export const handleExport = (groupRef, fileName = "SAKRAD_Isimlik", isMultiColor
 
   const exporter = new STLExporter();
   
-  // THREE.js Sahesinde Y=Yukarı iken 3D Yazıcılarda (Slicer) Z=Yukarı mantığı vardır.
-  // Bu yüzden aktarmadan hemen önce modeli 90 derece X ekseninde çeviriyoruz 
-  // (böylece tablonun altı düz şekilde tablaya yapışıyor, yüz üstü düşmüyor).
+  // THREE.js: Y=Yukarı → Slicer: Z=Yukarı dönüşümü
   const originalScale = groupRef.current.scale.clone();
   const originalRotation = groupRef.current.rotation.clone();
 
-  // DUAL EXPORT VE SINGLE EXPORT İÇİN TEK GEÇERLİ BOYUT DÜZELTMESİ (Garantili!)
-  // Sahnede model 0.05 oranında küçüktür (ekrana sığması için). 
-  // Gerçek mm'ye ulaşmak için export anında (ana ebeveyne dokunmadan) bunu 20 ile çarpıyoruz.
+  // Sahne ölçeği 0.05 → gerçek mm için 20x
   groupRef.current.scale.multiplyScalar(20);
   groupRef.current.rotation.x += Math.PI / 2;
   groupRef.current.updateMatrixWorld(true);
 
+  // Yardımcı: STL buffer'ı normalize et
+  const stlBuf = (res) => res instanceof ArrayBuffer ? res : (res.buffer || res);
+
+  // Yardımcı: Tüm mesh'leri recursive topla (group içindekiler dahil)
+  const collectMeshes = (obj) => {
+    let meshes = [];
+    if (obj.isMesh && obj.geometry) meshes.push(obj);
+    if (obj.children) obj.children.forEach(c => meshes.push(...collectMeshes(c)));
+    return meshes;
+  };
+
   if (isMultiColor) {
     const zip = new JSZip();
-
-    // Sahnedeki (orijinal) çocukları güvenle ayır
     const allChildren = [...groupRef.current.children];
 
-    // 1. SADECE TABANI AKTAR
-    groupRef.current.children = allChildren.filter(c => !c.name || c.name === 'BasePlate');
-    groupRef.current.updateMatrixWorld(true);
-    const baseResult = exporter.parse(groupRef.current, { binary: true });
-    zip.file(`${fileName}_TABAN.stl`, baseResult instanceof ArrayBuffer ? baseResult : baseResult.buffer || baseResult);
+    // Kalp mesh'i var mı kontrol et (ILoveIcon_1 = kalp)
+    const allMeshes = collectMeshes(groupRef.current);
+    const heartMesh = allMeshes.find(m => m.name === 'ILoveIcon_1');
 
-    // 2. SADECE YAZILARI AKTAR (Text*, ILove*, TextIcon* isimli meshler)
-    groupRef.current.children = allChildren.filter(c => c.name && c.name !== 'BasePlate');
+    // 1. SADECE TABANI AKTAR
+    groupRef.current.children = allChildren.filter(c => c.name === 'BasePlate');
     groupRef.current.updateMatrixWorld(true);
-    const textResult = exporter.parse(groupRef.current, { binary: true });
-    zip.file(`${fileName}_YAZI.stl`, textResult instanceof ArrayBuffer ? textResult : textResult.buffer || textResult);
+    zip.file(`${fileName}_TABAN.stl`, stlBuf(exporter.parse(groupRef.current, { binary: true })));
+
+    if (heartMesh) {
+      // 2a. YAZI (kalp HARİÇ — I harfi, simge, ana metin)
+      heartMesh.visible = false;
+      groupRef.current.children = allChildren.filter(c => c.name && c.name !== 'BasePlate');
+      groupRef.current.updateMatrixWorld(true);
+      zip.file(`${fileName}_YAZI.stl`, stlBuf(exporter.parse(groupRef.current, { binary: true })));
+      heartMesh.visible = true;
+
+      // 2b. KALP (sadece kalp — kırmızı renk için ayrı dosya)
+      const otherMeshes = allMeshes.filter(m => m !== heartMesh);
+      otherMeshes.forEach(m => { m.userData._vis = m.visible; m.visible = false; });
+      groupRef.current.children = allChildren.filter(c => c.name && c.name !== 'BasePlate');
+      groupRef.current.updateMatrixWorld(true);
+      zip.file(`${fileName}_KALP_KIRMIZI.stl`, stlBuf(exporter.parse(groupRef.current, { binary: true })));
+      otherMeshes.forEach(m => { m.visible = m.userData._vis !== false; });
+    } else {
+      // Kalp yoksa normal 2'li export
+      groupRef.current.children = allChildren.filter(c => c.name && c.name !== 'BasePlate');
+      groupRef.current.updateMatrixWorld(true);
+      zip.file(`${fileName}_YAZI.stl`, stlBuf(exporter.parse(groupRef.current, { binary: true })));
+    }
 
     // Çocukları eski haline getir
     groupRef.current.children = allChildren;
     
-    // Zip indir
     zip.generateAsync({ type: "blob" }).then((content) => {
       downloadBlob(content, `${fileName}_CiftRenk.zip`);
     });
 
   } else {
-    // Binary format daha az yer kaplar ve 3D yazıcılar için idealdir
     try {
       const result = exporter.parse(groupRef.current, { binary: true });
-      const buffer = result instanceof ArrayBuffer ? result : (result.buffer || result);
-      const blob = new Blob([buffer], { type: 'application/octet-stream' });
+      const blob = new Blob([stlBuf(result)], { type: 'application/octet-stream' });
       downloadBlob(blob, `${fileName}_${new Date().getTime()}.stl`);
     } catch (err) {
       console.error('STL Export Error:', err);
@@ -74,7 +93,7 @@ export const handleExport = (groupRef, fileName = "SAKRAD_Isimlik", isMultiColor
     }
   }
 
-  // Tekrar eski görsel boyutuna ve açısına geri al
+  // Eski görsel boyuta geri al
   groupRef.current.scale.copy(originalScale);
   groupRef.current.rotation.copy(originalRotation);
   groupRef.current.updateMatrixWorld(true);
