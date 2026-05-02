@@ -161,29 +161,52 @@ export function createSkullShape(size = 24) {
 export function createRookShape(size = 24) {
   const s = size / 2;
   const shape = new THREE.Shape();
-  const w = s * 0.6;
   
-  // Dış hat (Saat yönünün tersi - CCW)
-  shape.moveTo(-w, -s * 0.9);
-  shape.lineTo(w, -s * 0.9);
-  shape.lineTo(w * 0.8, -s * 0.6);
-  shape.lineTo(w * 0.6, -s * 0.5);
-  shape.lineTo(w * 0.5, s * 0.4);
-  shape.lineTo(w * 0.8, s * 0.5);
-  shape.lineTo(w * 0.8, s * 0.9);
+  // Dış hat (CCW - Saat yönünün tersi)
+  shape.moveTo(-s * 0.7, -s * 0.9); // Sol alt
+  shape.lineTo(s * 0.7, -s * 0.9);  // Sağ alt
+  shape.lineTo(s * 0.6, -s * 0.7);  // Taban eğimi
+  shape.lineTo(s * 0.65, -s * 0.6); // Alt boğum
+  shape.lineTo(s * 0.5, -s * 0.5);
+  shape.quadraticCurveTo(s * 0.4, 0, s * 0.45, s * 0.4); // Sütun kıvrımı
+  shape.lineTo(s * 0.65, s * 0.5);  // Üst boğum
+  shape.lineTo(s * 0.65, s * 0.9);  // Sağ sur duvarı
   
-  shape.lineTo(w * 0.3, s * 0.9);
-  shape.lineTo(w * 0.3, s * 0.6);
-  shape.lineTo(-w * 0.3, s * 0.6);
-  shape.lineTo(-w * 0.3, s * 0.9);
+  // Sur (Battlement) girintileri
+  shape.lineTo(s * 0.35, s * 0.9);
+  shape.lineTo(s * 0.35, s * 0.65);
+  shape.lineTo(s * 0.15, s * 0.65);
+  shape.lineTo(s * 0.15, s * 0.9);
+  shape.lineTo(-s * 0.15, s * 0.9);
+  shape.lineTo(-s * 0.15, s * 0.65);
+  shape.lineTo(-s * 0.35, s * 0.65);
+  shape.lineTo(-s * 0.35, s * 0.9);
   
-  shape.lineTo(-w * 0.8, s * 0.9);
-  shape.lineTo(-w * 0.8, s * 0.5);
-  shape.lineTo(-w * 0.5, s * 0.4);
-  shape.lineTo(-w * 0.6, -s * 0.5);
-  shape.lineTo(-w * 0.8, -s * 0.6);
-  shape.lineTo(-w, -s * 0.9);
+  shape.lineTo(-s * 0.65, s * 0.9); // Sol sur duvarı
+  shape.lineTo(-s * 0.65, s * 0.5); // Üst boğum sol
+  shape.lineTo(-s * 0.45, s * 0.4); 
+  shape.quadraticCurveTo(-s * 0.4, 0, -s * 0.5, -s * 0.5); // Sol sütun kıvrımı
+  shape.lineTo(-s * 0.65, -s * 0.6); // Alt boğum sol
+  shape.lineTo(-s * 0.6, -s * 0.7);  // Taban eğimi sol
+  shape.lineTo(-s * 0.7, -s * 0.9);  // Bitiş (Sol alt)
+
+  // İç pencere (Haç şeklinde) - Saat Yönünde (CW) çizilmeli!
+  const cross = new THREE.Path();
+  cross.moveTo(-s * 0.05, -s * 0.2); // Alt sol
+  cross.lineTo(-s * 0.05, 0);        // İçeri
+  cross.lineTo(-s * 0.2, 0);         // Sol kol alt
+  cross.lineTo(-s * 0.2, s * 0.1);   // Sol kol üst
+  cross.lineTo(-s * 0.05, s * 0.1);  // İçeri
+  cross.lineTo(-s * 0.05, s * 0.3);  // Üst kol sol
+  cross.lineTo(s * 0.05, s * 0.3);   // Üst kol sağ
+  cross.lineTo(s * 0.05, s * 0.1);   // İçeri
+  cross.lineTo(s * 0.2, s * 0.1);    // Sağ kol üst
+  cross.lineTo(s * 0.2, 0);          // Sağ kol alt
+  cross.lineTo(s * 0.05, 0);         // İçeri
+  cross.lineTo(s * 0.05, -s * 0.2);  // Alt sağ
   
+  shape.holes.push(cross);
+
   return shape;
 }
 
@@ -191,29 +214,32 @@ export function createRacketShape(size = 24) {
   const s = size / 2;
   const shape = new THREE.Shape();
   
-  const hw = s * 0.15; // handle width
-  const cy = s * 0.3; // head center y
-  const hrX = s * 0.6; // head radius X
-  const hrY = s * 0.7; // head radius Y
+  const hw = s * 0.12; // Sap genişliği
+  const cy = s * 0.3; // Kafa merkezi y
+  const hrX = s * 0.6; // Kafa yarıçap X
+  const hrY = s * 0.7; // Kafa yarıçap Y
   
   // Dış hat (CCW)
   shape.moveTo(-hw, -s * 0.9);
   shape.lineTo(hw, -s * 0.9);
-  shape.lineTo(hw, -s * 0.3); // neck right
+  shape.lineTo(hw, -s * 0.2); // Boyun sağ alt
   
-  shape.bezierCurveTo(hrX, -s * 0.2, hrX, cy + hrY, 0, cy + hrY);
-  shape.bezierCurveTo(-hrX, cy + hrY, -hrX, -s * 0.2, -hw, -s * 0.3);
+  // Kafa kıvrımı
+  shape.lineTo(hrX * 0.6, -s * 0.05);
+  shape.bezierCurveTo(hrX, -s * 0.05, hrX, cy + hrY, 0, cy + hrY);
+  shape.bezierCurveTo(-hrX, cy + hrY, -hrX, -s * 0.05, -hrX * 0.6, -s * 0.05);
   
-  shape.lineTo(-hw, -s * 0.9);
+  shape.lineTo(-hw, -s * 0.2); // Boyun sol alt
+  shape.lineTo(-hw, -s * 0.9); // Sap sol
   
-  // İç delik (Saat yönü - CW)
+  // İç boşluk (CW - Saat Yönü)
   const hole = new THREE.Path();
-  const irX = hrX * 0.75;
-  const irY = hrY * 0.75;
+  const irX = hrX * 0.8;
+  const irY = hrY * 0.8;
   
-  hole.moveTo(0, cy + irY);
-  hole.bezierCurveTo(irX, cy + irY, irX, cy - irY + s*0.2, 0, cy - irY);
-  hole.bezierCurveTo(-irX, cy - irY + s*0.2, -irX, cy + irY, 0, cy + irY);
+  hole.moveTo(0, cy + irY); // Üstten başla
+  hole.bezierCurveTo(irX, cy + irY, irX, cy - irY + s*0.1, 0, cy - irY + s*0.1);
+  hole.bezierCurveTo(-irX, cy - irY + s*0.1, -irX, cy + irY, 0, cy + irY);
   
   shape.holes.push(hole);
   return shape;

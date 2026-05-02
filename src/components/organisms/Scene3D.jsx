@@ -212,7 +212,7 @@ export const Scene3D = ({
 
   const maxTextWidth = Math.max(textSizeMain[0], textSizeSub[0]);
   
-  const iconSpacing = 6.0; 
+  const iconSpacing = 2.0; 
   const iconRealSize = hasIcon ? (letterSize * iconScale) : 0;
   const contentW = maxTextWidth + (hasIcon ? (iconRealSize + iconSpacing) : 0);
   
