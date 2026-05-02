@@ -18,6 +18,7 @@ export const SettingsCard = ({
   plateThickness, setPlateThickness,
   holePosition, setHolePosition,
   textScale, setTextScale,
+  iconScale, setIconScale,
   textOffset, setTextOffset,
   autoCenter, setAutoCenter,
   baseHeight, setBaseHeight,
