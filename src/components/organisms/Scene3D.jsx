@@ -197,6 +197,8 @@ export const Scene3D = ({
   }, [iconType, letterSize]);
 
   const hasIcon = iconShape !== null;
+  const iconSpacing = 2.0;
+  const iconRealSize = hasIcon ? (letterSize * iconScale) : 0;
 
   // VERTICAL LAYOUT (Z-axis in 3D)
   const lineSpacing = letterSize * 1.3;
