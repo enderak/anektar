@@ -252,7 +252,7 @@ export const Scene3D = ({
   const pBottom = 12.0;
 
   const maxTextWidth = Math.max(textSizeMain[0], textSizeSub[0]);
-  const iLoveWidth = isILoveMode ? (1.5 * letterSize) : 0;
+  const iLoveWidth = isILoveMode ? (letterSize * 0.85) : 0;
   
   const textBlockWidth = Math.max(maxTextWidth, iLoveWidth);
   let actualContentW = textBlockWidth;

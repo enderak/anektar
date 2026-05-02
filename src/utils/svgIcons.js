@@ -290,30 +290,36 @@ export function createILoveShape(size = 24) {
   const s = size / 2;
   const shapes = [];
   
-  // 1. "I" harfi
+  // Dimensions
+  const iW = s * 0.25;      // I letter width
+  const iH = s * 1.2;       // I letter height  
+  const hs = s * 0.65;      // Heart half-size
+  const gap = s * 0.15;     // Gap between I and heart
+  
+  // Total width: I + gap + heart diameter
+  const totalW = iW + gap + hs * 2;
+  
+  // Center everything at origin (0,0)
+  const iCenterX = -totalW / 2 + iW / 2;
+  const heartCenterX = -totalW / 2 + iW + gap + hs;
+  
+  // 1. "I" harfi — centered vertically and horizontally
   const iShape = new THREE.Shape();
-  const iWidth = s * 0.3;
-  const iHeight = s * 1.3;
-  const iX = -s * 0.8; // Sola kaydır
-  iShape.moveTo(iX - iWidth/2, -iHeight/2);
-  iShape.lineTo(iX + iWidth/2, -iHeight/2);
-  iShape.lineTo(iX + iWidth/2, iHeight/2);
-  iShape.lineTo(iX - iWidth/2, iHeight/2);
+  iShape.moveTo(iCenterX - iW / 2, -iH / 2);
+  iShape.lineTo(iCenterX + iW / 2, -iH / 2);
+  iShape.lineTo(iCenterX + iW / 2, iH / 2);
+  iShape.lineTo(iCenterX - iW / 2, iH / 2);
   iShape.closePath();
   shapes.push(iShape);
   
-  // 2. Kalp
+  // 2. Kalp — centered at heartCenterX
+  const hx = heartCenterX;
   const heart = new THREE.Shape();
-  const hx = s * 0.4; // Sağa kaydır
-  const hy = 0;
-  const hs = s * 0.85; // Kalp boyutu
-  
-  // Heart math (CCW)
-  heart.moveTo(hx, hy + hs * 0.5);
-  heart.bezierCurveTo(hx, hy + hs * 0.9, hx - hs, hy + hs * 0.9, hx - hs, hy + hs * 0.3);
-  heart.bezierCurveTo(hx - hs, hy - hs * 0.3, hx, hy - hs * 0.5, hx, hy - hs);
-  heart.bezierCurveTo(hx, hy - hs * 0.5, hx + hs, hy - hs * 0.3, hx + hs, hy + hs * 0.3);
-  heart.bezierCurveTo(hx + hs, hy + hs * 0.9, hx, hy + hs * 0.9, hx, hy + hs * 0.5);
+  heart.moveTo(hx, hs * 0.5);
+  heart.bezierCurveTo(hx, hs * 0.9, hx - hs, hs * 0.9, hx - hs, hs * 0.3);
+  heart.bezierCurveTo(hx - hs, -hs * 0.3, hx, -hs * 0.5, hx, -hs);
+  heart.bezierCurveTo(hx, -hs * 0.5, hx + hs, -hs * 0.3, hx + hs, hs * 0.3);
+  heart.bezierCurveTo(hx + hs, hs * 0.9, hx, hs * 0.9, hx, hs * 0.5);
   shapes.push(heart);
   
   return shapes;
