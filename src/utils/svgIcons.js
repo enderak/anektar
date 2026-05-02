@@ -158,6 +158,67 @@ export function createSkullShape(size = 24) {
   return shape;
 }
 
+export function createRookShape(size = 24) {
+  const s = size / 2;
+  const shape = new THREE.Shape();
+  const w = s * 0.6;
+  
+  // Dış hat (Saat yönünün tersi - CCW)
+  shape.moveTo(-w, -s * 0.9);
+  shape.lineTo(w, -s * 0.9);
+  shape.lineTo(w * 0.8, -s * 0.6);
+  shape.lineTo(w * 0.6, -s * 0.5);
+  shape.lineTo(w * 0.5, s * 0.4);
+  shape.lineTo(w * 0.8, s * 0.5);
+  shape.lineTo(w * 0.8, s * 0.9);
+  
+  shape.lineTo(w * 0.3, s * 0.9);
+  shape.lineTo(w * 0.3, s * 0.6);
+  shape.lineTo(-w * 0.3, s * 0.6);
+  shape.lineTo(-w * 0.3, s * 0.9);
+  
+  shape.lineTo(-w * 0.8, s * 0.9);
+  shape.lineTo(-w * 0.8, s * 0.5);
+  shape.lineTo(-w * 0.5, s * 0.4);
+  shape.lineTo(-w * 0.6, -s * 0.5);
+  shape.lineTo(-w * 0.8, -s * 0.6);
+  shape.lineTo(-w, -s * 0.9);
+  
+  return shape;
+}
+
+export function createRacketShape(size = 24) {
+  const s = size / 2;
+  const shape = new THREE.Shape();
+  
+  const hw = s * 0.15; // handle width
+  const cy = s * 0.3; // head center y
+  const hrX = s * 0.6; // head radius X
+  const hrY = s * 0.7; // head radius Y
+  
+  // Dış hat (CCW)
+  shape.moveTo(-hw, -s * 0.9);
+  shape.lineTo(hw, -s * 0.9);
+  shape.lineTo(hw, -s * 0.3); // neck right
+  
+  shape.bezierCurveTo(hrX, -s * 0.2, hrX, cy + hrY, 0, cy + hrY);
+  shape.bezierCurveTo(-hrX, cy + hrY, -hrX, -s * 0.2, -hw, -s * 0.3);
+  
+  shape.lineTo(-hw, -s * 0.9);
+  
+  // İç delik (Saat yönü - CW)
+  const hole = new THREE.Path();
+  const irX = hrX * 0.75;
+  const irY = hrY * 0.75;
+  
+  hole.moveTo(0, cy + irY);
+  hole.bezierCurveTo(irX, cy + irY, irX, cy - irY + s*0.2, 0, cy - irY);
+  hole.bezierCurveTo(-irX, cy - irY + s*0.2, -irX, cy + irY, 0, cy + irY);
+  
+  shape.holes.push(hole);
+  return shape;
+}
+
 // Simge fabrika fonksiyonu - type'a göre shape üretir
 export function createIconShape(type, size = 24) {
   switch (type) {
@@ -165,6 +226,8 @@ export function createIconShape(type, size = 24) {
     case 'heart': return createHeartShape(size);
     case 'star_crescent': return createStarCrescentShape(size);
     case 'skull': return createSkullShape(size);
+    case 'rook': return createRookShape(size);
+    case 'racket': return createRacketShape(size);
     default: return null;
   }
 }

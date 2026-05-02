@@ -169,6 +169,8 @@ export const SettingsCard = ({
                 <option value="star_crescent">{t('icon_star_crescent')} 🌙</option>
                 <option value="heart">{t('icon_heart')} ❤️</option>
                 <option value="skull">{t('icon_skull')} 💀</option>
+                <option value="rook">{t('icon_rook')} ♖</option>
+                <option value="racket">{t('icon_racket')} 🏸</option>
                 <option value="custom">{t('icon_custom')} 📁</option>
               </select>
               <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
@@ -274,7 +276,7 @@ export const SettingsCard = ({
           <div className="bg-slate-100/80 p-1 rounded-xl flex items-center h-11 w-full relative">
             <button 
               onClick={() => setBaseShape('rectangle')}
-              className={`z-10 flex-1 text-[11px] font-bold tracking-wider rounded-lg h-full transition-colors ${
+              className={`z-10 flex-1 text-[10px] sm:text-[11px] font-bold tracking-wider rounded-lg h-full transition-colors ${
                 baseShape === 'rectangle' ? 'bg-white shadow-sm text-emerald-600' : 'text-slate-400 hover:text-slate-600'
               }`}
             >
@@ -282,7 +284,7 @@ export const SettingsCard = ({
             </button>
             <button 
               onClick={() => setBaseShape('teardrop')}
-              className={`z-10 flex-1 text-[11px] font-bold tracking-wider rounded-lg h-full transition-colors ${
+              className={`z-10 flex-1 text-[10px] sm:text-[11px] font-bold tracking-wider rounded-lg h-full transition-colors ${
                 baseShape === 'teardrop' ? 'bg-white shadow-sm text-emerald-600' : 'text-slate-400 hover:text-slate-600'
               }`}
             >
@@ -290,11 +292,19 @@ export const SettingsCard = ({
             </button>
             <button 
               onClick={() => setBaseShape('heart')}
-              className={`z-10 flex-1 text-[11px] font-bold tracking-wider rounded-lg h-full transition-colors ${
+              className={`z-10 flex-1 text-[10px] sm:text-[11px] font-bold tracking-wider rounded-lg h-full transition-colors ${
                 baseShape === 'heart' ? 'bg-white shadow-sm text-emerald-600' : 'text-slate-400 hover:text-slate-600'
               }`}
             >
-              ❤️ {t('shape_heart')}
+              ❤️
+            </button>
+            <button 
+              onClick={() => setBaseShape('contour')}
+              className={`z-10 flex-1 text-[10px] sm:text-[11px] font-bold tracking-wider rounded-lg h-full transition-colors ${
+                baseShape === 'contour' ? 'bg-white shadow-sm text-emerald-600' : 'text-slate-400 hover:text-slate-600'
+              }`}
+            >
+              {t('shape_contour')}
             </button>
           </div>
         </div>

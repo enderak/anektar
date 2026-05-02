@@ -1,7 +1,9 @@
 import React, { useMemo, useState } from 'react';
 import { Text3D, PerspectiveCamera, OrbitControls } from '@react-three/drei';
 import * as THREE from 'three';
+import { FontLoader } from 'three/examples/jsm/loaders/FontLoader.js';
 import { createIconShape } from '../../utils/svgIcons';
+import { createContourBaseShape } from '../../utils/contourUtils';
 
 const SCALE = 0.05;
 
@@ -140,6 +142,7 @@ export const Scene3D = ({
 }) => {
   const [textSizeMain, setTextSizeMain] = useState([60, 20, 6]);
   const [textSizeSub, setTextSizeSub] = useState([0, 0, 0]);
+  const [loadedFont, setLoadedFont] = useState(null);
 
   React.useEffect(() => {
     if (!text || text.trim().length === 0) {
@@ -176,6 +179,14 @@ export const Scene3D = ({
     if (fontFamily === 'droid') return "/fonts/droid_sans_bold.typeface.json";
     return "/fonts/optimer_bold.typeface.json";
   }, [fontFamily]);
+
+  // Load font synchronously for contour generation
+  React.useEffect(() => {
+    const loader = new FontLoader();
+    loader.load(fontPath, (font) => {
+      setLoadedFont(font);
+    });
+  }, [fontPath]);
 
   // Programatik icon shape oluştur
   const iconScale = 0.65; // İkon yazıdan biraz küçük
@@ -252,7 +263,24 @@ export const Scene3D = ({
 
   // Taban şekli seçimi
   const baseShape = useMemo(() => {
-    if (selectedShape === 'heart') {
+    if (selectedShape === 'contour' && loadedFont) {
+      return createContourBaseShape({
+        font: loadedFont,
+        text,
+        subText,
+        hasSubText,
+        letterSize,
+        isItalic,
+        iconShape,
+        iconX: iconX - baseCenterX, // local iconX
+        iconScale,
+        textShiftX: hasIcon ? (iconPosition === 'left' ? iconTotalWidth / 2 : -iconTotalWidth / 2) : 0,
+        mainYOffset,
+        subYOffset,
+        holeConfig: { x: holeX, y: holeZ, r: holeR },
+        offsetRadius: 5.0 // 5mm contour padding
+      });
+    } else if (selectedShape === 'heart') {
       return createHeartBaseShape(baseW, baseD, { x: holeX, y: holeZ, r: holeR });
     } else if (selectedShape === 'teardrop') {
       return createTeardropShape(baseW, baseD, isLeft, { x: holeX, y: holeZ, r: holeR });
