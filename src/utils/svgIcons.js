@@ -162,86 +162,105 @@ export function createRookShape(size = 24) {
   const s = size / 2;
   const shape = new THREE.Shape();
   
-  // Dış hat (CCW - Saat yönünün tersi)
-  shape.moveTo(-s * 0.7, -s * 0.9); // Sol alt
-  shape.lineTo(s * 0.7, -s * 0.9);  // Sağ alt
-  shape.lineTo(s * 0.6, -s * 0.7);  // Taban eğimi
-  shape.lineTo(s * 0.65, -s * 0.6); // Alt boğum
-  shape.lineTo(s * 0.5, -s * 0.5);
-  shape.quadraticCurveTo(s * 0.4, 0, s * 0.45, s * 0.4); // Sütun kıvrımı
-  shape.lineTo(s * 0.65, s * 0.5);  // Üst boğum
-  shape.lineTo(s * 0.65, s * 0.9);  // Sağ sur duvarı
+  // Base
+  shape.moveTo(-s * 0.6, -s * 0.9);
+  shape.lineTo(s * 0.6, -s * 0.9);
+  shape.lineTo(s * 0.6, -s * 0.7);
+  shape.lineTo(s * 0.45, -s * 0.6);
   
-  // Sur (Battlement) girintileri
-  shape.lineTo(s * 0.35, s * 0.9);
-  shape.lineTo(s * 0.35, s * 0.65);
-  shape.lineTo(s * 0.15, s * 0.65);
-  shape.lineTo(s * 0.15, s * 0.9);
-  shape.lineTo(-s * 0.15, s * 0.9);
-  shape.lineTo(-s * 0.15, s * 0.65);
-  shape.lineTo(-s * 0.35, s * 0.65);
-  shape.lineTo(-s * 0.35, s * 0.9);
+  // Waist
+  shape.quadraticCurveTo(s * 0.35, 0, s * 0.45, s * 0.4);
   
-  shape.lineTo(-s * 0.65, s * 0.9); // Sol sur duvarı
-  shape.lineTo(-s * 0.65, s * 0.5); // Üst boğum sol
-  shape.lineTo(-s * 0.45, s * 0.4); 
-  shape.quadraticCurveTo(-s * 0.4, 0, -s * 0.5, -s * 0.5); // Sol sütun kıvrımı
-  shape.lineTo(-s * 0.65, -s * 0.6); // Alt boğum sol
-  shape.lineTo(-s * 0.6, -s * 0.7);  // Taban eğimi sol
-  shape.lineTo(-s * 0.7, -s * 0.9);  // Bitiş (Sol alt)
-
-  // İç pencere (Haç şeklinde) - Saat Yönünde (CW) çizilmeli!
-  const cross = new THREE.Path();
-  cross.moveTo(-s * 0.05, -s * 0.2); // Alt sol
-  cross.lineTo(-s * 0.05, 0);        // İçeri
-  cross.lineTo(-s * 0.2, 0);         // Sol kol alt
-  cross.lineTo(-s * 0.2, s * 0.1);   // Sol kol üst
-  cross.lineTo(-s * 0.05, s * 0.1);  // İçeri
-  cross.lineTo(-s * 0.05, s * 0.3);  // Üst kol sol
-  cross.lineTo(s * 0.05, s * 0.3);   // Üst kol sağ
-  cross.lineTo(s * 0.05, s * 0.1);   // İçeri
-  cross.lineTo(s * 0.2, s * 0.1);    // Sağ kol üst
-  cross.lineTo(s * 0.2, 0);          // Sağ kol alt
-  cross.lineTo(s * 0.05, 0);         // İçeri
-  cross.lineTo(s * 0.05, -s * 0.2);  // Alt sağ
+  // Top collar
+  shape.lineTo(s * 0.6, s * 0.5);
+  shape.lineTo(s * 0.6, s * 0.9);
   
-  shape.holes.push(cross);
+  // Battlements (CCW)
+  shape.lineTo(s * 0.3, s * 0.9);
+  shape.lineTo(s * 0.3, s * 0.65);
+  shape.lineTo(s * 0.1, s * 0.65);
+  shape.lineTo(s * 0.1, s * 0.9);
+  shape.lineTo(-s * 0.1, s * 0.9);
+  shape.lineTo(-s * 0.1, s * 0.65);
+  shape.lineTo(-s * 0.3, s * 0.65);
+  shape.lineTo(-s * 0.3, s * 0.9);
+  shape.lineTo(-s * 0.6, s * 0.9);
+  
+  // Left side going down
+  shape.lineTo(-s * 0.6, s * 0.5);
+  shape.lineTo(-s * 0.45, s * 0.4);
+  shape.quadraticCurveTo(-s * 0.35, 0, -s * 0.45, -s * 0.6);
+  shape.lineTo(-s * 0.6, -s * 0.7);
+  shape.lineTo(-s * 0.6, -s * 0.9);
 
   return shape;
 }
 
-export function createRacketShape(size = 24) {
+export function createTennisRacketShape(size = 24) {
   const s = size / 2;
   const shape = new THREE.Shape();
   
-  const hw = s * 0.12; // Sap genişliği
-  const cy = s * 0.3; // Kafa merkezi y
-  const hrX = s * 0.6; // Kafa yarıçap X
-  const hrY = s * 0.7; // Kafa yarıçap Y
+  const hw = s * 0.12; 
+  const cy = s * 0.35; 
+  const hrX = s * 0.6; 
+  const hrY = s * 0.75; 
+  
+  // Sap ve boyun (CCW)
+  shape.moveTo(-hw, -s * 0.9);
+  shape.lineTo(hw, -s * 0.9);
+  shape.lineTo(hw, -s * 0.25);
+  
+  shape.lineTo(hrX * 0.6, 0); // V yaka açılır
+  
+  shape.bezierCurveTo(hrX, 0, hrX, cy + hrY, 0, cy + hrY);
+  shape.bezierCurveTo(-hrX, cy + hrY, -hrX, 0, -hrX * 0.6, 0);
+  
+  shape.lineTo(-hw, -s * 0.25);
+  shape.lineTo(-hw, -s * 0.9);
+  
+  // Büyük İç Boşluk (Tel kısmı) - Saat Yönü (CW)
+  const hole1 = new THREE.Path();
+  const irX = hrX * 0.85;
+  const irY = hrY * 0.85;
+  hole1.moveTo(0, cy + irY);
+  hole1.bezierCurveTo(irX, cy + irY, irX, cy - irY + s*0.2, 0, cy - irY + s*0.1);
+  hole1.bezierCurveTo(-irX, cy - irY + s*0.2, -irX, cy + irY, 0, cy + irY);
+  shape.holes.push(hole1);
+
+  // Boyun Boşluğu (V şeklinde üçgen delik)
+  const hole2 = new THREE.Path();
+  // Saat Yönünde (CW)
+  hole2.moveTo(0, -s * 0.05); // Üst orta
+  hole2.lineTo(hw * 0.8, -s * 0.2); // Sağ alt
+  hole2.lineTo(-hw * 0.8, -s * 0.2); // Sol alt
+  hole2.lineTo(0, -s * 0.05);
+  shape.holes.push(hole2);
+  
+  return shape;
+}
+
+export function createTableTennisShape(size = 24) {
+  const s = size / 2;
+  const shape = new THREE.Shape();
+  
+  const hw = s * 0.18; // Sap geniş
+  const cy = s * 0.25; 
+  const hrX = s * 0.6; 
+  const hrY = s * 0.7; 
   
   // Dış hat (CCW)
   shape.moveTo(-hw, -s * 0.9);
   shape.lineTo(hw, -s * 0.9);
-  shape.lineTo(hw, -s * 0.2); // Boyun sağ alt
+  shape.lineTo(hw, -s * 0.3); // sap sonu
   
-  // Kafa kıvrımı
-  shape.lineTo(hrX * 0.6, -s * 0.05);
-  shape.bezierCurveTo(hrX, -s * 0.05, hrX, cy + hrY, 0, cy + hrY);
-  shape.bezierCurveTo(-hrX, cy + hrY, -hrX, -s * 0.05, -hrX * 0.6, -s * 0.05);
+  // Raket kısmı (Oval kafa)
+  shape.lineTo(hrX * 0.5, -s * 0.05); // Raket alt sağ köşesi
+  shape.bezierCurveTo(hrX * 1.1, -s * 0.05, hrX * 1.1, cy + hrY, 0, cy + hrY);
+  shape.bezierCurveTo(-hrX * 1.1, cy + hrY, -hrX * 1.1, -s * 0.05, -hrX * 0.5, -s * 0.05);
   
-  shape.lineTo(-hw, -s * 0.2); // Boyun sol alt
-  shape.lineTo(-hw, -s * 0.9); // Sap sol
+  shape.lineTo(-hw, -s * 0.3);
+  shape.lineTo(-hw, -s * 0.9);
   
-  // İç boşluk (CW - Saat Yönü)
-  const hole = new THREE.Path();
-  const irX = hrX * 0.8;
-  const irY = hrY * 0.8;
-  
-  hole.moveTo(0, cy + irY); // Üstten başla
-  hole.bezierCurveTo(irX, cy + irY, irX, cy - irY + s*0.1, 0, cy - irY + s*0.1);
-  hole.bezierCurveTo(-irX, cy - irY + s*0.1, -irX, cy + irY, 0, cy + irY);
-  
-  shape.holes.push(hole);
   return shape;
 }
 
@@ -253,7 +272,8 @@ export function createIconShape(type, size = 24) {
     case 'star_crescent': return createStarCrescentShape(size);
     case 'skull': return createSkullShape(size);
     case 'rook': return createRookShape(size);
-    case 'racket': return createRacketShape(size);
+    case 'racket_tennis': return createTennisRacketShape(size);
+    case 'racket_table': return createTableTennisShape(size);
     default: return null;
   }
 }
