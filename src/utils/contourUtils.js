@@ -91,16 +91,28 @@ export function createContourBaseShape({
   // 3. Icon
   if (iconShape) {
     const iconPts = iconShape.getPoints(16);
-    // Icon 3D pos: X = iconX, Z = 0
-    // But wait, iconX passed from Scene3D is absolute X.
-    // Let's expect localIconX instead, or pass baseCenterX and subtract it here.
-    // The signature doesn't have baseCenterX anymore, let's assume iconX is already local! (We will fix this in Scene3D)
     const tIconPts = iconPts.map(p => {
       const px = (p.x * iconScale) + iconX;
-      const py = (p.y * iconScale); // icon Z is 0, so local Y is 0
+      const py = (p.y * iconScale); 
       return { X: Math.round(px * scale), Y: Math.round(py * scale) };
     });
     co.AddPath(tIconPts, ClipperLib.JoinType.jtRound, ClipperLib.EndType.etClosedPolygon);
+  }
+
+  // 4. Bridges (Spines) to connect everything so they form a single solid body
+  // Text center is approximately at (textShiftX, 0)
+  const textCenter = { X: Math.round(textShiftX * scale), Y: 0 };
+  
+  if (iconShape) {
+    const iconCenter = { X: Math.round(iconX * scale), Y: 0 };
+    // Bridge from text to icon
+    co.AddPath([textCenter, iconCenter], ClipperLib.JoinType.jtRound, ClipperLib.EndType.etOpenRound);
+  }
+
+  if (holeConfig) {
+    const holeCenter = { X: Math.round(holeConfig.x * scale), Y: Math.round(holeConfig.y * scale) };
+    // Bridge from hole to text
+    co.AddPath([holeCenter, textCenter], ClipperLib.JoinType.jtRound, ClipperLib.EndType.etOpenRound);
   }
 
   // Execute Offset
