@@ -459,6 +459,7 @@ export const Scene3D = ({
           {isILoveMode && iLoveShape && (
             <group 
               key={`ilove-${textDepth}-${baseHeight}-${scaleRatio}-${isItalic}-${letterSize}`}
+              name="ILoveGroup"
               position={[iLoveX, baseH, iLoveZ]}
               rotation={[-Math.PI / 2, 0, 0]}
               scale={[1, 1, 1]}
@@ -477,6 +478,7 @@ export const Scene3D = ({
             Array.isArray(iconShape) ? (
               <group
                 key={`icon-${iconType}-${textDepth}-${baseHeight}-${scaleRatio}-${isItalic}-${iconPosition}-${letterSize}`}
+                name="TextIconGroup"
                 position={[iconX, baseH, iconZ]}
                 rotation={[-Math.PI / 2, 0, 0]}
                 scale={[iconScale, iconScale, 1]}
