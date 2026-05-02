@@ -9,6 +9,7 @@ import { useTranslation } from 'react-i18next';
 const App = () => {
   const [text, setText] = useState('YM2KY');
   const [subText, setSubText] = useState(''); // Alt Metin
+  const [isILoveMode, setIsILoveMode] = useState(false); // I Love Formatı
   const [isItalic, setIsItalic] = useState(false); // İtalik Yazı
   const [fontFamily, setFontFamily] = useState('droid'); // optimer, helvetiker, droid
   const [iconType, setIconType] = useState('none'); // none, clover, star_crescent, skull, heart, custom
@@ -87,6 +88,8 @@ const App = () => {
             setText={setText}
             subText={subText}
             setSubText={setSubText}
+            isILoveMode={isILoveMode}
+            setIsILoveMode={setIsILoveMode}
             fontFamily={fontFamily}
             setFontFamily={setFontFamily}
             iconType={iconType}
@@ -166,6 +169,7 @@ const App = () => {
               <Scene3D 
                 text={text} 
                 subText={subText}
+                isILoveMode={isILoveMode}
                 fontFamily={fontFamily}
                 iconType={iconType}
                 customSvgUrl={customSvgUrl}

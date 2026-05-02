@@ -123,6 +123,7 @@ const createHeartBaseShape = (width, depth, holeConfig) => {
 export const Scene3D = ({
   text,
   subText,
+  isILoveMode,
   fontFamily,
   iconType,
   customSvgUrl,
@@ -200,17 +201,25 @@ export const Scene3D = ({
   const iconSpacing = 2.0;
   const iconRealSize = hasIcon ? (letterSize * iconScale) : 0;
 
+  const iLoveShape = useMemo(() => isILoveMode ? createIconShape('i_love', letterSize) : null, [isILoveMode, letterSize]);
+
   // VERTICAL LAYOUT (Z-axis in 3D)
   const lineSpacing = letterSize * 1.3;
   let currentZ = 0;
   
   let iconZ = 0;
+  let iLoveZ = 0;
   let textMainZ = 0;
   let textSubZ = 0;
 
   if (hasIcon && iconPosition === 'top') {
     iconZ = currentZ + iconRealSize / 2;
     currentZ += iconRealSize + iconSpacing;
+  }
+
+  if (isILoveMode) {
+    iLoveZ = currentZ + letterSize / 2;
+    currentZ += letterSize + iconSpacing;
   }
 
   textMainZ = currentZ + letterSize / 2;
@@ -226,6 +235,7 @@ export const Scene3D = ({
   const zOffset = -totalContentDepth / 2;
 
   iconZ += zOffset;
+  iLoveZ += zOffset;
   textMainZ += zOffset;
   textSubZ += zOffset;
 
@@ -240,11 +250,14 @@ export const Scene3D = ({
   const maxTextWidth = Math.max(textSizeMain[0], textSizeSub[0]);
   
   let actualContentW = maxTextWidth;
+  const iLoveWidth = isILoveMode ? (1.5 * letterSize) : 0;
+  actualContentW = Math.max(actualContentW, iLoveWidth);
+  
   if (hasIcon) {
     if (iconPosition === 'top') {
-      actualContentW = Math.max(maxTextWidth, iconRealSize);
+      actualContentW = Math.max(actualContentW, iconRealSize);
     } else {
-      actualContentW = maxTextWidth + iconSpacing + iconRealSize;
+      actualContentW = actualContentW + iconSpacing + iconRealSize;
     }
   }
 
@@ -325,6 +338,9 @@ export const Scene3D = ({
         mainYOffset: -textMainZ,
         subYOffset: -textSubZ,
         iconYOffset: -iconZ,
+        extraShapes: isILoveMode && iLoveShape ? [
+          { shape: iLoveShape, x: contentCenter, y: -iLoveZ, scale: 1.0 }
+        ] : [],
         holeConfig: { x: holeX, y: holeZ, r: holeR },
         offsetRadius: 5.0 // 5mm contour padding
       });
@@ -427,6 +443,24 @@ export const Scene3D = ({
               {subText}
               <meshStandardMaterial color={materialColor} roughness={0.4} metalness={0.1} />
             </Text3D>
+          )}
+
+          {/* I LOVE TITLE (Extra) */}
+          {isILoveMode && iLoveShape && (
+            <mesh 
+              key={`ilove-${textDepth}-${baseHeight}-${scaleRatio}-${isItalic}-${letterSize}`}
+              name="ILoveIcon"
+              position={[contentCenter, baseH, iLoveZ]}
+              rotation={[-Math.PI / 2, 0, 0]}
+              scale={[1, 1, 1]}
+            >
+              {iLoveShape.map((shape, idx) => (
+                <mesh key={idx}>
+                  <extrudeGeometry args={[shape, { depth: textDepth, bevelEnabled: false }]} />
+                  <meshStandardMaterial color={materialColor} roughness={0.4} metalness={0.1} />
+                </mesh>
+              ))}
+            </mesh>
           )}
 
           {/* SİMGE (ICON) */}

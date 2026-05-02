@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 export const SettingsCard = ({ 
   text, setText, 
   subText, setSubText,
+  isILoveMode, setIsILoveMode,
   fontFamily, setFontFamily,
   iconType, setIconType,
   customSvgUrl, setCustomSvgUrl,
@@ -109,6 +110,20 @@ export const SettingsCard = ({
             placeholder={t('placeholder_sub')}
           />
         </div>
+
+        {/* I Love Mode Toggle */}
+        <label className="flex items-center gap-3 p-3 bg-rose-50 border border-rose-100 rounded-xl cursor-pointer hover:bg-rose-100/80 transition-colors">
+          <div className="relative flex items-center">
+            <input 
+              type="checkbox" 
+              checked={isILoveMode}
+              onChange={(e) => setIsILoveMode(e.target.checked)}
+              className="peer sr-only"
+            />
+            <div className="w-10 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-rose-500"></div>
+          </div>
+          <span className="text-xs font-bold text-rose-800">{t('icon_i_love')}</span>
+        </label>
       </div>
 
       {/* Yazı Derinliği (Çıkıntı yüksekliği) */}
@@ -173,7 +188,6 @@ export const SettingsCard = ({
                 <option value="rook">{t('icon_rook')} ♖</option>
                 <option value="racket_table">{t('icon_racket_table')} 🏓</option>
                 <option value="racket_tennis">{t('icon_racket_tennis')} 🎾</option>
-                <option value="i_love">{t('icon_i_love')} ❤️</option>
                 <option value="custom">{t('icon_custom')} 📁</option>
               </select>
               <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">

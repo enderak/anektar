@@ -67,6 +67,7 @@ export function createContourBaseShape({
   mainYOffset,
   subYOffset,
   iconYOffset, // Yeni parametre: İkon dikey konumu
+  extraShapes = [], // [{ shape, x, y, scale }]
   holeConfig,
   offsetRadius = 5.0
 }) {
@@ -95,37 +96,48 @@ export function createContourBaseShape({
     });
   }
 
+  const allIconCenters = [];
+
+  const processShape = (s, x, y, scaleVal) => {
+    const pts = s.getPoints(16);
+    const tPts = pts.map(p => {
+      const px = (p.x * scaleVal) + x;
+      const py = (p.y * scaleVal) + y;
+      return { X: Math.round(px * scale), Y: Math.round(py * scale) };
+    });
+    if (ClipperLib.Clipper.Orientation(tPts)) tPts.reverse();
+    co.AddPath(tPts, ClipperLib.JoinType.jtRound, ClipperLib.EndType.etClosedPolygon);
+  };
+
   // 3. Icon
   if (iconShape) {
     const shapes = Array.isArray(iconShape) ? iconShape : [iconShape];
-    shapes.forEach(shape => {
-      const iconPts = shape.getPoints(16);
-      const tIconPts = iconPts.map(p => {
-        const px = (p.x * iconScale) + iconX;
-        const py = (p.y * iconScale) + iconYOffset; // iconYOffset kullan
-        return { X: Math.round(px * scale), Y: Math.round(py * scale) };
-      });
-      if (ClipperLib.Clipper.Orientation(tIconPts)) tIconPts.reverse();
-      co.AddPath(tIconPts, ClipperLib.JoinType.jtRound, ClipperLib.EndType.etClosedPolygon);
-    });
+    shapes.forEach(shape => processShape(shape, iconX, iconYOffset, iconScale));
+    allIconCenters.push({ X: Math.round(iconX * scale), Y: Math.round(iconYOffset * scale) });
   }
+
+  // 3.5 Extra Shapes (I Love Title etc.)
+  extraShapes.forEach(es => {
+    const shapes = Array.isArray(es.shape) ? es.shape : [es.shape];
+    shapes.forEach(shape => processShape(shape, es.x, es.y, es.scale));
+    allIconCenters.push({ X: Math.round(es.x * scale), Y: Math.round(es.y * scale) });
+  });
 
   // 4. Bridges (Spines) to connect everything so they form a single solid body
   const textCenter = { X: Math.round(textShiftX * scale), Y: Math.round(mainYOffset * scale) };
   let closestToHole = textCenter;
   
-  if (iconShape) {
-    const iconCenter = { X: Math.round(iconX * scale), Y: Math.round(iconYOffset * scale) };
+  allIconCenters.forEach(ic => {
     // Bridge from text to icon
-    co.AddPath([textCenter, iconCenter], ClipperLib.JoinType.jtRound, ClipperLib.EndType.etOpenRound);
+    co.AddPath([textCenter, ic], ClipperLib.JoinType.jtRound, ClipperLib.EndType.etOpenRound);
 
     // If there is a hole, find if it's closer to the icon or the text
     if (holeConfig) {
-      if (Math.abs(holeConfig.x - iconX) < Math.abs(holeConfig.x - textShiftX)) {
-        closestToHole = iconCenter;
+      if (Math.abs(holeConfig.x - (ic.X/scale)) < Math.abs(holeConfig.x - textShiftX)) {
+        closestToHole = ic;
       }
     }
-  }
+  });
 
   if (holeConfig) {
     const holeCenter = { X: Math.round(holeConfig.x * scale), Y: Math.round(holeConfig.y * scale) };
