@@ -10,7 +10,7 @@ const App = () => {
   const [text, setText] = useState('YM2KY');
   const [subText, setSubText] = useState(''); // Alt Metin
   const [isItalic, setIsItalic] = useState(false); // İtalik Yazı
-  const [fontFamily, setFontFamily] = useState('optimer'); // optimer, helvetiker, droid
+  const [fontFamily, setFontFamily] = useState('droid'); // optimer, helvetiker, droid
   const [iconType, setIconType] = useState('none'); // none, clover, star_crescent, skull, heart, custom
   const [customSvgUrl, setCustomSvgUrl] = useState(null); // Özel SVG Data URL
   const [iconPosition, setIconPosition] = useState('left'); // left, right
@@ -21,6 +21,7 @@ const App = () => {
   const [holePosition, setHolePosition] = useState('top_left'); // Delik Konumu
   const [targetWidth, setTargetWidth] = useState(0); // OTO
   const [textScale, setTextScale] = useState(100); // Yazı Boyutu (%)
+  const [iconScale, setIconScale] = useState(100); // Simge Boyutu (%)
   const [textOffset, setTextOffset] = useState(0);
   const [autoCenter, setAutoCenter] = useState(true);
   const [baseHeight, setBaseHeight] = useState(3.0); // İnce taban (anahtarlık)
@@ -108,6 +109,8 @@ const App = () => {
             setHolePosition={setHolePosition}
             textScale={textScale}
             setTextScale={setTextScale}
+            iconScale={iconScale}
+            setIconScale={setIconScale}
             textOffset={textOffset}
             setTextOffset={setTextOffset}
             autoCenter={autoCenter}
@@ -175,6 +178,7 @@ const App = () => {
                 baseShape={baseShape}
                 holePosition={holePosition}
                 textScale={textScale}
+                iconScale={iconScale}
                 textOffset={textOffset}
                 autoCenter={autoCenter}
                 baseHeight={baseHeight}

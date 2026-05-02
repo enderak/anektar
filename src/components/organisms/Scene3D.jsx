@@ -138,7 +138,8 @@ export const Scene3D = ({
   textOffset,
   autoCenter,
   baseHeight,
-  targetWidth
+  targetWidth,
+  iconScale: customIconScale = 100
 }) => {
   const [textSizeMain, setTextSizeMain] = useState([60, 20, 6]);
   const [textSizeSub, setTextSizeSub] = useState([0, 0, 0]);
@@ -189,7 +190,7 @@ export const Scene3D = ({
   }, [fontPath]);
 
   // Programatik icon shape oluştur
-  const iconScale = 0.65; // İkon yazıdan biraz küçük
+  const iconScale = 0.65 * (customIconScale / 100.0); // İkon yazıdan biraz küçük
   const iconShape = useMemo(() => {
     if (iconType === 'none') return null;
     return createIconShape(iconType, letterSize);
