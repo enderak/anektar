@@ -234,6 +234,10 @@ export const Scene3D = ({
   const totalContentDepth = currentZ;
   const zOffset = -totalContentDepth / 2;
 
+  if (hasIcon && (iconPosition === 'left' || iconPosition === 'right')) {
+    iconZ = totalContentDepth / 2;
+  }
+
   iconZ += zOffset;
   iLoveZ += zOffset;
   textMainZ += zOffset;
@@ -248,16 +252,16 @@ export const Scene3D = ({
   const pBottom = 12.0;
 
   const maxTextWidth = Math.max(textSizeMain[0], textSizeSub[0]);
-  
-  let actualContentW = maxTextWidth;
   const iLoveWidth = isILoveMode ? (1.5 * letterSize) : 0;
-  actualContentW = Math.max(actualContentW, iLoveWidth);
+  
+  const textBlockWidth = Math.max(maxTextWidth, iLoveWidth);
+  let actualContentW = textBlockWidth;
   
   if (hasIcon) {
     if (iconPosition === 'top') {
       actualContentW = Math.max(actualContentW, iconRealSize);
     } else {
-      actualContentW = actualContentW + iconSpacing + iconRealSize;
+      actualContentW = textBlockWidth + iconSpacing + iconRealSize;
     }
   }
 
@@ -275,15 +279,21 @@ export const Scene3D = ({
 
   let textX = contentCenter;
   let iconX = contentCenter;
+  let iLoveX = contentCenter;
 
   if (hasIcon) {
     if (iconPosition === 'left') {
       iconX = contentLeft + iconRealSize / 2;
-      textX = contentRight - maxTextWidth / 2;
+      textX = contentRight - textBlockWidth / 2;
+      iLoveX = textX;
     } else if (iconPosition === 'right') {
-      textX = contentLeft + maxTextWidth / 2;
+      textX = contentLeft + textBlockWidth / 2;
+      iLoveX = textX;
       iconX = contentRight - iconRealSize / 2;
     }
+  } else {
+    // If no icon, still need to align I Love with text
+    iLoveX = textX;
   }
 
   const baseCenterX = 0; 
@@ -339,7 +349,7 @@ export const Scene3D = ({
         subYOffset: -textSubZ,
         iconYOffset: -iconZ,
         extraShapes: isILoveMode && iLoveShape ? [
-          { shape: iLoveShape, x: contentCenter, y: -iLoveZ, scale: 1.0 }
+          { shape: iLoveShape, x: iLoveX, y: -iLoveZ, scale: 1.0 }
         ] : [],
         holeConfig: { x: holeX, y: holeZ, r: holeR },
         offsetRadius: 5.0 // 5mm contour padding
@@ -450,7 +460,7 @@ export const Scene3D = ({
             <mesh 
               key={`ilove-${textDepth}-${baseHeight}-${scaleRatio}-${isItalic}-${letterSize}`}
               name="ILoveIcon"
-              position={[contentCenter, baseH, iLoveZ]}
+              position={[iLoveX, baseH, iLoveZ]}
               rotation={[-Math.PI / 2, 0, 0]}
               scale={[1, 1, 1]}
             >
