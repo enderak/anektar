@@ -467,7 +467,7 @@ export const Scene3D = ({
               {iLoveShape.map((shape, idx) => (
                 <mesh key={idx}>
                   <extrudeGeometry args={[shape, { depth: textDepth, bevelEnabled: false }]} />
-                  <meshStandardMaterial color={materialColor} roughness={0.4} metalness={0.1} />
+                  <meshStandardMaterial color={idx === 1 ? '#EF4444' : materialColor} roughness={0.4} metalness={0.1} />
                 </mesh>
               ))}
             </mesh>
