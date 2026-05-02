@@ -173,6 +173,7 @@ export const SettingsCard = ({
                 <option value="rook">{t('icon_rook')} ♖</option>
                 <option value="racket_table">{t('icon_racket_table')} 🏓</option>
                 <option value="racket_tennis">{t('icon_racket_tennis')} 🎾</option>
+                <option value="i_love">{t('icon_i_love')} ❤️</option>
                 <option value="custom">{t('icon_custom')} 📁</option>
               </select>
               <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
@@ -215,6 +216,14 @@ export const SettingsCard = ({
                   }`}
                 >
                   {t('icon_pos_left')}
+                </button>
+                <button 
+                  onClick={() => setIconPosition('top')}
+                  className={`z-10 flex-1 text-[11px] font-bold tracking-wider rounded-lg h-full transition-colors ${
+                    iconPosition === 'top' ? 'bg-white shadow-sm text-slate-800' : 'text-slate-400 hover:text-slate-600'
+                  }`}
+                >
+                  {t('icon_pos_top')}
                 </button>
                 <button 
                   onClick={() => setIconPosition('right')}

@@ -66,6 +66,7 @@ export function createContourBaseShape({
   textShiftX,
   mainYOffset,
   subYOffset,
+  iconYOffset, // Yeni parametre: İkon dikey konumu
   holeConfig,
   offsetRadius = 5.0
 }) {
@@ -96,22 +97,25 @@ export function createContourBaseShape({
 
   // 3. Icon
   if (iconShape) {
-    const iconPts = iconShape.getPoints(16);
-    const tIconPts = iconPts.map(p => {
-      const px = (p.x * iconScale) + iconX;
-      const py = (p.y * iconScale); 
-      return { X: Math.round(px * scale), Y: Math.round(py * scale) };
+    const shapes = Array.isArray(iconShape) ? iconShape : [iconShape];
+    shapes.forEach(shape => {
+      const iconPts = shape.getPoints(16);
+      const tIconPts = iconPts.map(p => {
+        const px = (p.x * iconScale) + iconX;
+        const py = (p.y * iconScale) + iconYOffset; // iconYOffset kullan
+        return { X: Math.round(px * scale), Y: Math.round(py * scale) };
+      });
+      if (ClipperLib.Clipper.Orientation(tIconPts)) tIconPts.reverse();
+      co.AddPath(tIconPts, ClipperLib.JoinType.jtRound, ClipperLib.EndType.etClosedPolygon);
     });
-    if (ClipperLib.Clipper.Orientation(tIconPts)) tIconPts.reverse();
-    co.AddPath(tIconPts, ClipperLib.JoinType.jtRound, ClipperLib.EndType.etClosedPolygon);
   }
 
   // 4. Bridges (Spines) to connect everything so they form a single solid body
-  const textCenter = { X: Math.round(textShiftX * scale), Y: 0 };
+  const textCenter = { X: Math.round(textShiftX * scale), Y: Math.round(mainYOffset * scale) };
   let closestToHole = textCenter;
   
   if (iconShape) {
-    const iconCenter = { X: Math.round(iconX * scale), Y: 0 };
+    const iconCenter = { X: Math.round(iconX * scale), Y: Math.round(iconYOffset * scale) };
     // Bridge from text to icon
     co.AddPath([textCenter, iconCenter], ClipperLib.JoinType.jtRound, ClipperLib.EndType.etOpenRound);
 

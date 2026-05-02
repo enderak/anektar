@@ -198,11 +198,36 @@ export const Scene3D = ({
 
   const hasIcon = iconShape !== null;
 
-  // Y ekseni (3D Z ekseni) metin yerleşimi
+  // VERTICAL LAYOUT (Z-axis in 3D)
   const lineSpacing = letterSize * 1.3;
-  const mainYOffset = hasSubText ? (lineSpacing / 2) : 0;
-  const subYOffset = hasSubText ? -(lineSpacing / 2) : 0;
+  let currentZ = 0;
+  
+  let iconZ = 0;
+  let textMainZ = 0;
+  let textSubZ = 0;
 
+  if (hasIcon && iconPosition === 'top') {
+    iconZ = currentZ + iconRealSize / 2;
+    currentZ += iconRealSize + iconSpacing;
+  }
+
+  textMainZ = currentZ + letterSize / 2;
+  currentZ += letterSize;
+
+  if (hasSubText) {
+    currentZ += (lineSpacing - letterSize); // gap
+    textSubZ = currentZ + letterSize / 2;
+    currentZ += letterSize;
+  }
+
+  const totalContentDepth = currentZ;
+  const zOffset = -totalContentDepth / 2;
+
+  iconZ += zOffset;
+  textMainZ += zOffset;
+  textSubZ += zOffset;
+
+  // HORIZONTAL LAYOUT (X-axis)
   const isLeft = holePosition.includes('left');
   const isRight = holePosition.includes('right');
   const pLeft = isLeft ? 24.0 : 10.0;
@@ -212,13 +237,17 @@ export const Scene3D = ({
 
   const maxTextWidth = Math.max(textSizeMain[0], textSizeSub[0]);
   
-  const iconSpacing = 2.0; 
-  const iconRealSize = hasIcon ? (letterSize * iconScale) : 0;
-  const contentW = maxTextWidth + (hasIcon ? (iconRealSize + iconSpacing) : 0);
-  
-  let baseW = contentW + pLeft + pRight;
-  const totalTextDepth = hasSubText ? (lineSpacing + letterSize) : letterSize;
-  let baseD = totalTextDepth + pTop + pBottom;
+  let actualContentW = maxTextWidth;
+  if (hasIcon) {
+    if (iconPosition === 'top') {
+      actualContentW = Math.max(maxTextWidth, iconRealSize);
+    } else {
+      actualContentW = maxTextWidth + iconSpacing + iconRealSize;
+    }
+  }
+
+  let baseW = actualContentW + pLeft + pRight;
+  let baseD = totalContentDepth + pTop + pBottom;
 
   if (selectedShape === 'teardrop') {
     baseW += (10.0 * scaleRatio);
@@ -226,22 +255,20 @@ export const Scene3D = ({
 
   // Calculate local centers
   const contentCenter = (pLeft - pRight) / 2;
-  const contentLeft = contentCenter - contentW / 2;
-  const contentRight = contentCenter + contentW / 2;
+  const contentLeft = contentCenter - actualContentW / 2;
+  const contentRight = contentCenter + actualContentW / 2;
 
-  let textX = 0;
-  let iconX = 0;
+  let textX = contentCenter;
+  let iconX = contentCenter;
 
   if (hasIcon) {
     if (iconPosition === 'left') {
       iconX = contentLeft + iconRealSize / 2;
       textX = contentRight - maxTextWidth / 2;
-    } else {
+    } else if (iconPosition === 'right') {
       textX = contentLeft + maxTextWidth / 2;
       iconX = contentRight - iconRealSize / 2;
     }
-  } else {
-    textX = contentCenter;
   }
 
   const baseCenterX = 0; 
@@ -257,8 +284,8 @@ export const Scene3D = ({
     if (isLeft) holeX = contentLeft - holeR - 1.0;
     else if (isRight) holeX = contentRight + holeR + 1.0;
 
-    if (holePosition.includes('top')) holeZ = -totalTextDepth/2 - 1.0;
-    else if (holePosition.includes('bottom')) holeZ = totalTextDepth/2 + 1.0;
+    if (holePosition.includes('top')) holeZ = -totalContentDepth/2 - 1.0;
+    else if (holePosition.includes('bottom')) holeZ = totalContentDepth/2 + 1.0;
     else holeZ = 0;
   } else {
     // Standard bounds
@@ -293,8 +320,9 @@ export const Scene3D = ({
         iconX: iconX,
         iconScale,
         textShiftX: textX,
-        mainYOffset,
-        subYOffset,
+        mainYOffset: -textMainZ,
+        subYOffset: -textSubZ,
+        iconYOffset: -iconZ,
         holeConfig: { x: holeX, y: holeZ, r: holeR },
         offsetRadius: 5.0 // 5mm contour padding
       });
@@ -375,7 +403,7 @@ export const Scene3D = ({
               height={textDepth} // textDepth kullanılıyor
               curveSegments={16}
               bevelEnabled={false}
-              onUpdate={(self) => processTextGeometry(self, setTextSizeMain, -mainYOffset)}
+              onUpdate={(self) => processTextGeometry(self, setTextSizeMain, textMainZ)}
             >
               {text}
               <meshStandardMaterial color={materialColor} roughness={0.4} metalness={0.1} />
@@ -392,7 +420,7 @@ export const Scene3D = ({
               height={textDepth} 
               curveSegments={16}
               bevelEnabled={false}
-              onUpdate={(self) => processTextGeometry(self, setTextSizeSub, -subYOffset)}
+              onUpdate={(self) => processTextGeometry(self, setTextSizeSub, textSubZ)}
             >
               {subText}
               <meshStandardMaterial color={materialColor} roughness={0.4} metalness={0.1} />
@@ -404,12 +432,23 @@ export const Scene3D = ({
             <mesh 
               key={`icon-${iconType}-${textDepth}-${baseHeight}-${scaleRatio}-${isItalic}-${iconPosition}-${letterSize}`}
               name="TextIcon"
-              position={[iconX, baseH, 0]}
+              position={[iconX, baseH, iconZ]}
               rotation={[-Math.PI / 2, 0, 0]}
               scale={[iconScale, iconScale, 1]}
             >
-              <extrudeGeometry args={[iconShape, { depth: textDepth, bevelEnabled: false }]} />
-              <meshStandardMaterial color={materialColor} roughness={0.4} metalness={0.1} />
+              {Array.isArray(iconShape) ? (
+                iconShape.map((shape, idx) => (
+                  <mesh key={idx}>
+                    <extrudeGeometry args={[shape, { depth: textDepth, bevelEnabled: false }]} />
+                    <meshStandardMaterial color={materialColor} roughness={0.4} metalness={0.1} />
+                  </mesh>
+                ))
+              ) : (
+                <extrudeGeometry args={[iconShape, { depth: textDepth, bevelEnabled: false }]} />
+              )}
+              {!Array.isArray(iconShape) && (
+                <meshStandardMaterial color={materialColor} roughness={0.4} metalness={0.1} />
+              )}
             </mesh>
           )}
 

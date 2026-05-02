@@ -86,18 +86,40 @@ export function createHeartShape(size = 24) {
  */
 export function createStarCrescentShape(size = 24) {
   const s = size / 2;
-  const shape = new THREE.Shape();
-  
-  // Dış hilal (ay) - büyük daire
+  const shapes = [];
+
+  // 1. Dış hilal (ay) - büyük daire
+  const crescent = new THREE.Shape();
   const moonR = s * 0.85;
-  shape.absarc(0, 0, moonR, Math.PI * 0.15, Math.PI * 1.85, false);
+  crescent.absarc(-s*0.1, 0, moonR, Math.PI * 0.15, Math.PI * 1.85, false);
   
   // İç hilal kesimi - daha küçük daire ile kapat
   const innerR = moonR * 0.72;
-  const offsetX = moonR * 0.35;
-  shape.absarc(offsetX, 0, innerR, Math.PI * 1.85, Math.PI * 0.15, true);
+  const offsetX = moonR * 0.35 - s*0.1;
+  crescent.absarc(offsetX, 0, innerR, Math.PI * 1.85, Math.PI * 0.15, true);
+  shapes.push(crescent);
 
-  return shape;
+  // 2. Yıldız
+  const star = new THREE.Shape();
+  const starR = s * 0.35;
+  const starInnerR = starR * 0.4;
+  const starCx = s * 0.35;
+  const starCy = s * 0.15;
+  const points = 5;
+  
+  // Yıldız çizimi (CCW)
+  for (let i = 0; i < points * 2; i++) {
+    const r = i % 2 === 0 ? starR : starInnerR;
+    const angle = (Math.PI / 2) + (i * Math.PI / points);
+    const px = starCx + Math.cos(angle) * r;
+    const py = starCy + Math.sin(angle) * r;
+    if (i === 0) star.moveTo(px, py);
+    else star.lineTo(px, py);
+  }
+  star.closePath();
+  shapes.push(star);
+
+  return shapes;
 }
 
 /**
@@ -264,6 +286,39 @@ export function createTableTennisShape(size = 24) {
   return shape;
 }
 
+export function createILoveShape(size = 24) {
+  const s = size / 2;
+  const shapes = [];
+  
+  // 1. "I" harfi
+  const iShape = new THREE.Shape();
+  const iWidth = s * 0.3;
+  const iHeight = s * 1.3;
+  const iX = -s * 0.8; // Sola kaydır
+  iShape.moveTo(iX - iWidth/2, -iHeight/2);
+  iShape.lineTo(iX + iWidth/2, -iHeight/2);
+  iShape.lineTo(iX + iWidth/2, iHeight/2);
+  iShape.lineTo(iX - iWidth/2, iHeight/2);
+  iShape.closePath();
+  shapes.push(iShape);
+  
+  // 2. Kalp
+  const heart = new THREE.Shape();
+  const hx = s * 0.4; // Sağa kaydır
+  const hy = 0;
+  const hs = s * 0.85; // Kalp boyutu
+  
+  // Heart math (CCW)
+  heart.moveTo(hx, hy + hs * 0.5);
+  heart.bezierCurveTo(hx, hy + hs * 0.9, hx - hs, hy + hs * 0.9, hx - hs, hy + hs * 0.3);
+  heart.bezierCurveTo(hx - hs, hy - hs * 0.3, hx, hy - hs * 0.5, hx, hy - hs);
+  heart.bezierCurveTo(hx, hy - hs * 0.5, hx + hs, hy - hs * 0.3, hx + hs, hy + hs * 0.3);
+  heart.bezierCurveTo(hx + hs, hy + hs * 0.9, hx, hy + hs * 0.9, hx, hy + hs * 0.5);
+  shapes.push(heart);
+  
+  return shapes;
+}
+
 // Simge fabrika fonksiyonu - type'a göre shape üretir
 export function createIconShape(type, size = 24) {
   switch (type) {
@@ -274,6 +329,7 @@ export function createIconShape(type, size = 24) {
     case 'rook': return createRookShape(size);
     case 'racket_tennis': return createTennisRacketShape(size);
     case 'racket_table': return createTableTennisShape(size);
+    case 'i_love': return createILoveShape(size);
     default: return null;
   }
 }
