@@ -203,54 +203,69 @@ export const Scene3D = ({
   const mainYOffset = hasSubText ? (lineSpacing / 2) : 0;
   const subYOffset = hasSubText ? -(lineSpacing / 2) : 0;
 
-  // Padding ayarları
-  const isLeft = holePosition.includes('left');
-  const isRight = holePosition.includes('right');
-  
   const pLeft = isLeft ? 24.0 : 10.0;
   const pRight = isRight ? 24.0 : 10.0;
   const pTop = 12.0;
   const pBottom = 12.0;
 
-  // Taban genişliği için en uzun metni baz al
   const maxTextWidth = Math.max(textSizeMain[0], textSizeSub[0]);
   
+  const iconSpacing = 6.0; 
   const iconRealSize = hasIcon ? (letterSize * iconScale) : 0;
-  const iconTotalWidth = hasIcon ? (iconRealSize + 6.0) : 0; // Boşluk payını 12'den 6'ya indirdim
+  const contentW = maxTextWidth + (hasIcon ? (iconRealSize + iconSpacing) : 0);
   
-  let baseW = maxTextWidth + pLeft + pRight + iconTotalWidth;
-  
-  // Taban derinliği (satır sayısına göre)
+  let baseW = contentW + pLeft + pRight;
   const totalTextDepth = hasSubText ? (lineSpacing + letterSize) : letterSize;
   let baseD = totalTextDepth + pTop + pBottom;
 
-  // Damla şeklinde uçlar yuvarlak olduğu için yazının taşmaması adına ekstra genişlik
   if (selectedShape === 'teardrop') {
     baseW += (10.0 * scaleRatio);
   }
 
-  // Tabanın merkezi
-  const baseCenterX = (pRight - pLeft) / 2;
+  // Calculate local centers
+  const contentCenter = (pLeft - pRight) / 2;
+  const contentLeft = contentCenter - contentW / 2;
+  const contentRight = contentCenter + contentW / 2;
+
+  let textX = 0;
+  let iconX = 0;
+
+  if (hasIcon) {
+    if (iconPosition === 'left') {
+      iconX = contentLeft + iconRealSize / 2;
+      textX = contentRight - maxTextWidth / 2;
+    } else {
+      textX = contentLeft + maxTextWidth / 2;
+      iconX = contentRight - iconRealSize / 2;
+    }
+  } else {
+    textX = contentCenter;
+  }
+
+  const baseCenterX = 0; 
   const baseCenterZ = 0; 
   const zCenterOffset = autoCenter ? 0 : textOffset;
 
-  // Delik koordinatları (Taban merkezine göre lokal)
   const holeR = 3.5; 
   let holeX = 0;
   let holeZ = 0;
 
-  if (isLeft) {
-    holeX = -baseW/2 + holeR + 4.5;
-  } else if (isRight) {
-    holeX = baseW/2 - holeR - 4.5;
-  }
+  if (selectedShape === 'contour') {
+    // Tight bounds for contour to avoid long bridges
+    if (isLeft) holeX = contentLeft - holeR - 1.0;
+    else if (isRight) holeX = contentRight + holeR + 1.0;
 
-  if (holePosition.includes('top')) {
-    holeZ = -baseD/2 + holeR + 4.5; 
-  } else if (holePosition.includes('bottom')) {
-    holeZ = baseD/2 - holeR - 4.5;
+    if (holePosition.includes('top')) holeZ = -totalTextDepth/2 - 1.0;
+    else if (holePosition.includes('bottom')) holeZ = totalTextDepth/2 + 1.0;
+    else holeZ = 0;
   } else {
-    holeZ = 0; // center
+    // Standard bounds
+    if (isLeft) holeX = -baseW/2 + holeR + 4.5;
+    else if (isRight) holeX = baseW/2 - holeR - 4.5;
+
+    if (holePosition.includes('top')) holeZ = -baseD/2 + holeR + 4.5;
+    else if (holePosition.includes('bottom')) holeZ = baseD/2 - holeR - 4.5;
+    else holeZ = 0;
   }
 
   if (selectedShape === 'teardrop') {
@@ -261,16 +276,6 @@ export const Scene3D = ({
   const scaledCenterZ = baseCenterZ * innerScale;
   const scaledBaseW = baseW * innerScale;
   const scaledBaseD = baseD * innerScale;
-
-  const iconX = useMemo(() => {
-    if (!hasIcon) return 0;
-    const textShiftDir = iconPosition === 'left' ? 1 : -1;
-    const iconDir = iconPosition === 'left' ? -1 : 1;
-    // Yazının merkezinden dışarı doğru itme: maxTextWidth/2 + boşluk + simgenin yarısı
-    const spacing = 3.0; // Yazı ile simge arasındaki net boşluğu 6'dan 3'e indirdim (Daha sıkı durması için)
-    const offsetFromCenter = (maxTextWidth / 2) + spacing + (iconRealSize / 2);
-    return baseCenterX + iconDir * offsetFromCenter + textShiftDir * (iconTotalWidth / 2);
-  }, [hasIcon, iconPosition, baseCenterX, maxTextWidth, iconRealSize, iconTotalWidth]);
 
   // Taban şekli seçimi
   const baseShape = useMemo(() => {
@@ -283,9 +288,9 @@ export const Scene3D = ({
         letterSize,
         isItalic,
         iconShape,
-        iconX: iconX - baseCenterX, // local iconX
+        iconX: iconX,
         iconScale,
-        textShiftX: hasIcon ? (iconPosition === 'left' ? iconTotalWidth / 2 : -iconTotalWidth / 2) : 0,
+        textShiftX: textX,
         mainYOffset,
         subYOffset,
         holeConfig: { x: holeX, y: holeZ, r: holeR },
@@ -326,10 +331,8 @@ export const Scene3D = ({
 
       self.geometry.rotateX(-Math.PI / 2);
       
-      const textShiftX = hasIcon ? (iconPosition === 'left' ? iconTotalWidth / 2 : -iconTotalWidth / 2) : 0;
-      
       // Z ekseninde yerleşim
-      self.geometry.translate(baseCenterX + textShiftX, baseH, yOffset);
+      self.geometry.translate(textX, baseH, yOffset);
 
       self.geometry.computeVertexNormals();
       self.geometry.computeBoundingBox();

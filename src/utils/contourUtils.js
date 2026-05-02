@@ -100,19 +100,26 @@ export function createContourBaseShape({
   }
 
   // 4. Bridges (Spines) to connect everything so they form a single solid body
-  // Text center is approximately at (textShiftX, 0)
   const textCenter = { X: Math.round(textShiftX * scale), Y: 0 };
+  let closestToHole = textCenter;
   
   if (iconShape) {
     const iconCenter = { X: Math.round(iconX * scale), Y: 0 };
     // Bridge from text to icon
     co.AddPath([textCenter, iconCenter], ClipperLib.JoinType.jtRound, ClipperLib.EndType.etOpenRound);
+
+    // If there is a hole, find if it's closer to the icon or the text
+    if (holeConfig) {
+      if (Math.abs(holeConfig.x - iconX) < Math.abs(holeConfig.x - textShiftX)) {
+        closestToHole = iconCenter;
+      }
+    }
   }
 
   if (holeConfig) {
     const holeCenter = { X: Math.round(holeConfig.x * scale), Y: Math.round(holeConfig.y * scale) };
-    // Bridge from hole to text
-    co.AddPath([holeCenter, textCenter], ClipperLib.JoinType.jtRound, ClipperLib.EndType.etOpenRound);
+    // Bridge from hole to closest element
+    co.AddPath([holeCenter, closestToHole], ClipperLib.JoinType.jtRound, ClipperLib.EndType.etOpenRound);
   }
 
   // Execute Offset
