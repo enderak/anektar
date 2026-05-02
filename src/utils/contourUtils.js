@@ -80,12 +80,18 @@ export function createContourBaseShape({
   
   // 1. Main Text
   const mainTextPts = getTextPoints(font, text, letterSize, isItalic, textShiftX, mainYOffset);
-  mainTextPts.forEach(pts => co.AddPath(pts, ClipperLib.JoinType.jtRound, ClipperLib.EndType.etClosedPolygon));
+  mainTextPts.forEach(pts => {
+    if (ClipperLib.Clipper.Orientation(pts)) pts.reverse();
+    co.AddPath(pts, ClipperLib.JoinType.jtRound, ClipperLib.EndType.etClosedPolygon);
+  });
 
   // 2. Sub Text
   if (hasSubText) {
     const subTextPts = getTextPoints(font, subText, letterSize, isItalic, textShiftX, subYOffset);
-    subTextPts.forEach(pts => co.AddPath(pts, ClipperLib.JoinType.jtRound, ClipperLib.EndType.etClosedPolygon));
+    subTextPts.forEach(pts => {
+      if (ClipperLib.Clipper.Orientation(pts)) pts.reverse();
+      co.AddPath(pts, ClipperLib.JoinType.jtRound, ClipperLib.EndType.etClosedPolygon);
+    });
   }
 
   // 3. Icon
@@ -96,6 +102,7 @@ export function createContourBaseShape({
       const py = (p.y * iconScale); 
       return { X: Math.round(px * scale), Y: Math.round(py * scale) };
     });
+    if (ClipperLib.Clipper.Orientation(tIconPts)) tIconPts.reverse();
     co.AddPath(tIconPts, ClipperLib.JoinType.jtRound, ClipperLib.EndType.etClosedPolygon);
   }
 
