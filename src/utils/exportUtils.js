@@ -1,4 +1,4 @@
-// src/utils/exportUtils.js — v5.0.0 (3-file AMS export)
+// src/utils/exportUtils.js — v6.0.0 (3-file AMS with physical mesh separation)
 import { STLExporter } from 'three/examples/jsm/exporters/STLExporter';
 import JSZip from 'jszip';
 
@@ -20,19 +20,16 @@ export const handleExport = (groupRef, fileName = "SAKRAD_Isimlik", isMultiColor
 
   const exporter = new STLExporter();
   
-  // THREE.js: Y=Yukarı → Slicer: Z=Yukarı dönüşümü
   const originalScale = groupRef.current.scale.clone();
   const originalRotation = groupRef.current.rotation.clone();
 
-  // Sahne ölçeği 0.05 → gerçek mm için 20x
   groupRef.current.scale.multiplyScalar(20);
   groupRef.current.rotation.x += Math.PI / 2;
   groupRef.current.updateMatrixWorld(true);
 
-  // Yardımcı: STL buffer'ı normalize et
   const stlBuf = (res) => res instanceof ArrayBuffer ? res : (res.buffer || res);
 
-  // Yardımcı: Tüm mesh'leri recursive topla (group içindekiler dahil)
+  // Recursive: tüm mesh'leri topla
   const collectMeshes = (obj) => {
     let meshes = [];
     if (obj.isMesh && obj.geometry) meshes.push(obj);
@@ -43,39 +40,50 @@ export const handleExport = (groupRef, fileName = "SAKRAD_Isimlik", isMultiColor
   if (isMultiColor) {
     const zip = new JSZip();
     const allChildren = [...groupRef.current.children];
-
-    // Kalp mesh'i var mı kontrol et (ILoveIcon_1 = kalp)
     const allMeshes = collectMeshes(groupRef.current);
     const heartMesh = allMeshes.find(m => m.name === 'ILoveIcon_1');
 
-    // 1. SADECE TABANI AKTAR
+    // 1. TABAN
     groupRef.current.children = allChildren.filter(c => c.name === 'BasePlate');
     groupRef.current.updateMatrixWorld(true);
     zip.file(`${fileName}_TABAN.stl`, stlBuf(exporter.parse(groupRef.current, { binary: true })));
 
     if (heartMesh) {
-      // 2a. YAZI (kalp HARİÇ — I harfi, simge, ana metin)
-      heartMesh.visible = false;
+      const heartParent = heartMesh.parent;
+      const heartIndex = heartParent.children.indexOf(heartMesh);
+
+      // 2a. YAZI — kalp mesh'ini fiziksel olarak gruptan çıkar
+      heartParent.children.splice(heartIndex, 1);
       groupRef.current.children = allChildren.filter(c => c.name && c.name !== 'BasePlate');
       groupRef.current.updateMatrixWorld(true);
       zip.file(`${fileName}_YAZI.stl`, stlBuf(exporter.parse(groupRef.current, { binary: true })));
-      heartMesh.visible = true;
 
-      // 2b. KALP (sadece kalp — kırmızı renk için ayrı dosya)
-      const otherMeshes = allMeshes.filter(m => m !== heartMesh);
-      otherMeshes.forEach(m => { m.userData._vis = m.visible; m.visible = false; });
+      // 2b. KALP — sadece kalbi gruptan çıkar, diğerlerini çıkar
+      // Kalbi geri koy, diğer kardeşlerini geçici olarak çıkar
+      const siblings = [...heartParent.children]; // I harfi vs.
+      heartParent.children.length = 0;
+      heartParent.children.push(heartMesh);
+
+      // Diğer top-level çocukları da geçici kaldır (TextMain vs.)
       groupRef.current.children = allChildren.filter(c => c.name && c.name !== 'BasePlate');
+      // Ama sadece ILoveGroup'u tut
+      const textChildren = groupRef.current.children.filter(c => c !== heartParent);
+      groupRef.current.children = [heartParent];
       groupRef.current.updateMatrixWorld(true);
       zip.file(`${fileName}_KALP_KIRMIZI.stl`, stlBuf(exporter.parse(groupRef.current, { binary: true })));
-      otherMeshes.forEach(m => { m.visible = m.userData._vis !== false; });
+
+      // Geri yükle
+      heartParent.children.length = 0;
+      siblings.forEach(s => heartParent.children.push(s));
+      heartParent.children.splice(heartIndex, 0, heartMesh);
     } else {
-      // Kalp yoksa normal 2'li export
+      // Kalp yoksa 2'li export
       groupRef.current.children = allChildren.filter(c => c.name && c.name !== 'BasePlate');
       groupRef.current.updateMatrixWorld(true);
       zip.file(`${fileName}_YAZI.stl`, stlBuf(exporter.parse(groupRef.current, { binary: true })));
     }
 
-    // Çocukları eski haline getir
+    // Sahneyi eski haline getir
     groupRef.current.children = allChildren;
     
     zip.generateAsync({ type: "blob" }).then((content) => {
@@ -93,7 +101,6 @@ export const handleExport = (groupRef, fileName = "SAKRAD_Isimlik", isMultiColor
     }
   }
 
-  // Eski görsel boyuta geri al
   groupRef.current.scale.copy(originalScale);
   groupRef.current.rotation.copy(originalRotation);
   groupRef.current.updateMatrixWorld(true);
