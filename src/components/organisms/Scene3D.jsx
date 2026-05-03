@@ -123,6 +123,7 @@ const createHeartBaseShape = (width, depth, holeConfig) => {
 export const Scene3D = ({
   text,
   subText,
+  phoneText,
   isILoveMode,
   fontFamily,
   iconType,
@@ -144,6 +145,7 @@ export const Scene3D = ({
 }) => {
   const [textSizeMain, setTextSizeMain] = useState([60, 20, 6]);
   const [textSizeSub, setTextSizeSub] = useState([0, 0, 0]);
+  const [textSizePhone, setTextSizePhone] = useState([0, 0, 0]);
   const [loadedFont, setLoadedFont] = useState(null);
 
   React.useEffect(() => {
@@ -158,11 +160,19 @@ export const Scene3D = ({
     }
   }, [subText]);
 
+  React.useEffect(() => {
+    if (!phoneText || phoneText.trim().length === 0) {
+      setTextSizePhone([0, 0, 0]);
+    }
+  }, [phoneText]);
+
   const scaleRatio = (textScale || 100) / 100.0;
   const letterSize = 30.0 * scaleRatio;         
+  const phoneLetterSize = 18.0 * scaleRatio; // Telefon numarası daha küçük olsun
   const baseH = baseHeight;        
 
   const hasSubText = subText && subText.trim().length > 0;
+  const hasPhoneText = phoneText && phoneText.trim().length > 0;
   
   // Italik için Shear Matrisi
   const shearMatrix = useMemo(() => {
@@ -405,6 +415,38 @@ export const Scene3D = ({
     }
   };
 
+  const processPhoneGeometry = (self, setSizeFunc) => {
+    if (!self.geometry.userData.morphed) {
+      self.geometry.computeBoundingBox();
+      let bbox = self.geometry.boundingBox;
+      
+      if (!bbox || bbox.min.x === Infinity || isNaN(bbox.min.x)) return;
+      
+      self.geometry.translate(
+        -(bbox.max.x + bbox.min.x) / 2, 
+        -(bbox.max.y + bbox.min.y) / 2,                    
+        0 
+      );
+
+      // Rotate to face downwards (Y- direction)
+      self.geometry.rotateX(Math.PI / 2);
+      
+      // Position at Y=0 (bottom of the baseplate), centered on X and Z
+      self.geometry.translate(baseCenterX, 0, baseCenterZ);
+
+      self.geometry.computeVertexNormals();
+      self.geometry.computeBoundingBox();
+      self.geometry.userData.morphed = true;
+
+      const fbox = self.geometry.boundingBox;
+      setSizeFunc([
+        fbox.max.x - fbox.min.x,
+        fbox.max.z - fbox.min.z, 
+        fbox.max.y - fbox.min.y
+      ]);
+    }
+  };
+
   return (
     <>
       <PerspectiveCamera makeDefault position={[0, 20, 30]} fov={35} />
@@ -451,6 +493,23 @@ export const Scene3D = ({
               onUpdate={(self) => processTextGeometry(self, setTextSizeSub, textSubZ)}
             >
               {subText}
+              <meshStandardMaterial color={materialColor} roughness={0.4} metalness={0.1} />
+            </Text3D>
+          )}
+
+          {/* ARKA YÜZ METNİ (TELEFON VB.) */}
+          {hasPhoneText && (
+            <Text3D
+              name="TextPhone"
+              key={`phone-${phoneText}-${baseHeight}-${scaleRatio}-${fontFamily}`}
+              font={fontPath}
+              size={phoneLetterSize}
+              height={0.6} // Ince, tabana gomulu
+              curveSegments={16}
+              bevelEnabled={false}
+              onUpdate={(self) => processPhoneGeometry(self, setTextSizePhone)}
+            >
+              {phoneText}
               <meshStandardMaterial color={materialColor} roughness={0.4} metalness={0.1} />
             </Text3D>
           )}

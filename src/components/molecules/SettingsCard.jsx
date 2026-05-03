@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 export const SettingsCard = ({ 
   text, setText, 
   subText, setSubText,
+  phoneText, setPhoneText,
   isILoveMode, setIsILoveMode,
   fontFamily, setFontFamily,
   iconType, setIconType,
@@ -108,6 +109,16 @@ export const SettingsCard = ({
             onChange={(e) => setSubText(e.target.value.toLocaleUpperCase('tr-TR'))}
             className="w-full bg-white border border-slate-200/80 text-sm font-bold text-slate-800 py-2.5 px-4 rounded-xl outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-50/50 transition-all shadow-sm"
             placeholder={t('placeholder_sub')}
+          />
+        </div>
+
+        <div className="flex flex-col gap-2">
+          <label className="text-[11px] font-bold text-slate-500">{t('phone_text')}</label>
+          <input 
+            value={phoneText}
+            onChange={(e) => setPhoneText(e.target.value)}
+            className="w-full bg-white border border-slate-200/80 text-sm font-bold text-slate-800 py-2.5 px-4 rounded-xl outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-50/50 transition-all shadow-sm"
+            placeholder={t('placeholder_phone')}
           />
         </div>
 
