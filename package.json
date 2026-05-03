@@ -1,7 +1,7 @@
 {
   "name": "sakrad-3d-keychain",
   "private": true,
-  "version": "4.0.0-sweep-update",
+  "version": "6.0.0-KEY06",
   "type": "module",
   "scripts": {
     "dev": "vite",
