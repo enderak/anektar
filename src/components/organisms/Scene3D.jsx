@@ -2,7 +2,6 @@ import React, { useMemo, useState } from 'react';
 import { Text3D, PerspectiveCamera, OrbitControls } from '@react-three/drei';
 import * as THREE from 'three';
 import { FontLoader } from 'three/examples/jsm/loaders/FontLoader.js';
-import { Geometry, Base, Subtraction } from '@react-three/csg';
 import { createIconShape } from '../../utils/svgIcons';
 import { createContourBaseShape } from '../../utils/contourUtils';
 
@@ -417,22 +416,25 @@ export const Scene3D = ({
     }
   };
 
-  const processPhoneCSGGeometry = (self, setSizeFunc) => {
+  const processPhoneGeometry = (self, setSizeFunc) => {
     if (!self.geometry.userData.morphed) {
       self.geometry.computeBoundingBox();
       let bbox = self.geometry.boundingBox;
       
       if (!bbox || bbox.min.x === Infinity || isNaN(bbox.min.x)) return;
       
-      // Lokal XY koordinatlarında merkeze al
       self.geometry.translate(
         -(bbox.max.x + bbox.min.x) / 2, 
         -(bbox.max.y + bbox.min.y) / 2,                    
         0 
       );
       
-      // Z ekseni zaten Extrude derinliğini (height) ifade ediyor. 
-      // X ekseni ve Y ekseni lokal olarak doğru yerde.
+      // Normal yazilar gibi yukari (Y+) extrude olmasi icin X ekseni etrafinda -90 derece donder
+      self.geometry.rotateX(-Math.PI / 2);
+      
+      // Y=0 seviyesinde taban merkezine yerleştir
+      self.geometry.translate(baseCenterX, 0, baseCenterZ);
+
       self.geometry.computeVertexNormals();
       self.geometry.computeBoundingBox();
       self.geometry.userData.morphed = true;
@@ -496,6 +498,25 @@ export const Scene3D = ({
             </Text3D>
           )}
 
+          {/* ARKA YÜZ METNİ (TELEFON VB.) */}
+          {hasPhoneText && phoneDepth > 0 && (
+            <group scale={[-1, 1, 1]}> {/* X ekseninde aynala ki alttan bakinca duz okunsun */}
+              <Text3D
+                name="TextPhone"
+                key={`phone-${phoneText}-${phoneDepth}-${scaleRatio}-${fontFamily}`}
+                font={fontPath}
+                size={phoneLetterSize}
+                height={phoneDepth} // Kullanicinin sectigi derinlik kadar yukari (ice) dogru
+                curveSegments={16}
+                bevelEnabled={false}
+                onUpdate={(self) => processPhoneGeometry(self, setTextSizePhone)}
+              >
+                {phoneText}
+                <meshStandardMaterial color={materialColor} roughness={0.4} metalness={0.1} />
+              </Text3D>
+            </group>
+          )}
+
           {/* I LOVE TITLE (Extra) */}
           {isILoveMode && iLoveShape && (
             <group 
@@ -545,49 +566,16 @@ export const Scene3D = ({
             )
           )}
 
-          {/* TABAN PLAKASI VE CSG OYMA (TELEFON VB.) */}
-          {hasPhoneText && phoneDepth > 0 ? (
-            <mesh 
-              name="BasePlateCSG" 
-              position={[baseCenterX, 0, baseCenterZ]} 
-              rotation={[-Math.PI / 2, 0, 0]}
-              receiveShadow
-            >
-              <Geometry>
-                <Base>
-                  <extrudeGeometry args={[baseShape, { depth: baseH, bevelEnabled: false }]} />
-                </Base>
-                <Subtraction 
-                  position={[0, 0, -0.1]} 
-                  scale={[-1, 1, 1]} 
-                >
-                  <Text3D
-                    name="TextPhoneCSG"
-                    key={`phone-csg-${phoneText}-${phoneDepth}-${scaleRatio}-${fontFamily}`}
-                    font={fontPath}
-                    size={phoneLetterSize}
-                    height={phoneDepth + 0.2} // Kesin kesmesi icin 0.2 fazlalık
-                    curveSegments={16}
-                    bevelEnabled={false}
-                    onUpdate={(self) => processPhoneCSGGeometry(self, setTextSizePhone)}
-                  >
-                    {phoneText}
-                  </Text3D>
-                </Subtraction>
-              </Geometry>
-              <meshStandardMaterial color={baseColor || '#334155'} roughness={0.8} />
-            </mesh>
-          ) : (
-            <mesh 
-              name="BasePlate" 
-              position={[baseCenterX, 0, baseCenterZ]} 
-              rotation={[-Math.PI / 2, 0, 0]}
-              receiveShadow
-            >
-              <extrudeGeometry args={[baseShape, { depth: baseH, bevelEnabled: false }]} />
-              <meshStandardMaterial color={baseColor || '#334155'} roughness={0.8} />
-            </mesh>
-          )}
+          {/* TABAN PLAKASI */}
+          <mesh 
+            name="BasePlate" 
+            position={[baseCenterX, 0, baseCenterZ]} 
+            rotation={[-Math.PI / 2, 0, 0]}
+            receiveShadow
+          >
+            <extrudeGeometry args={[baseShape, { depth: baseH, bevelEnabled: false }]} />
+            <meshStandardMaterial color={baseColor || '#334155'} roughness={0.8} />
+          </mesh>
 
         </group>
 
