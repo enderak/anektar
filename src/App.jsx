@@ -10,6 +10,7 @@ const App = () => {
   const [text, setText] = useState('YM2KY');
   const [subText, setSubText] = useState(''); // Alt Metin
   const [phoneText, setPhoneText] = useState(''); // Arka Yüz Metni
+  const [phoneDepth, setPhoneDepth] = useState(0.6); // Arka Yüz Oyma Derinliği
   const [isILoveMode, setIsILoveMode] = useState(false); // I Love Formatı
   const [isItalic, setIsItalic] = useState(false); // İtalik Yazı
   const [fontFamily, setFontFamily] = useState('droid'); // optimer, helvetiker, droid
@@ -91,6 +92,8 @@ const App = () => {
             setSubText={setSubText}
             phoneText={phoneText}
             setPhoneText={setPhoneText}
+            phoneDepth={phoneDepth}
+            setPhoneDepth={setPhoneDepth}
             isILoveMode={isILoveMode}
             setIsILoveMode={setIsILoveMode}
             fontFamily={fontFamily}
@@ -173,6 +176,7 @@ const App = () => {
                 text={text} 
                 subText={subText}
                 phoneText={phoneText}
+                phoneDepth={phoneDepth}
                 isILoveMode={isILoveMode}
                 fontFamily={fontFamily}
                 iconType={iconType}

@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { Text3D, PerspectiveCamera, OrbitControls } from '@react-three/drei';
 import * as THREE from 'three';
 import { FontLoader } from 'three/examples/jsm/loaders/FontLoader.js';
+import { Geometry, Base, Subtraction } from '@react-three/csg';
 import { createIconShape } from '../../utils/svgIcons';
 import { createContourBaseShape } from '../../utils/contourUtils';
 
@@ -124,6 +125,7 @@ export const Scene3D = ({
   text,
   subText,
   phoneText,
+  phoneDepth,
   isILoveMode,
   fontFamily,
   iconType,
@@ -415,25 +417,22 @@ export const Scene3D = ({
     }
   };
 
-  const processPhoneGeometry = (self, setSizeFunc) => {
+  const processPhoneCSGGeometry = (self, setSizeFunc) => {
     if (!self.geometry.userData.morphed) {
       self.geometry.computeBoundingBox();
       let bbox = self.geometry.boundingBox;
       
       if (!bbox || bbox.min.x === Infinity || isNaN(bbox.min.x)) return;
       
+      // Lokal XY koordinatlarında merkeze al
       self.geometry.translate(
         -(bbox.max.x + bbox.min.x) / 2, 
         -(bbox.max.y + bbox.min.y) / 2,                    
         0 
       );
-
-      // Rotate to face downwards (Y- direction)
-      self.geometry.rotateX(Math.PI / 2);
       
-      // Position at Y=0 (bottom of the baseplate), centered on X and Z
-      self.geometry.translate(baseCenterX, 0, baseCenterZ);
-
+      // Z ekseni zaten Extrude derinliğini (height) ifade ediyor. 
+      // X ekseni ve Y ekseni lokal olarak doğru yerde.
       self.geometry.computeVertexNormals();
       self.geometry.computeBoundingBox();
       self.geometry.userData.morphed = true;
@@ -497,23 +496,6 @@ export const Scene3D = ({
             </Text3D>
           )}
 
-          {/* ARKA YÜZ METNİ (TELEFON VB.) */}
-          {hasPhoneText && (
-            <Text3D
-              name="TextPhone"
-              key={`phone-${phoneText}-${baseHeight}-${scaleRatio}-${fontFamily}`}
-              font={fontPath}
-              size={phoneLetterSize}
-              height={0.6} // Ince, tabana gomulu
-              curveSegments={16}
-              bevelEnabled={false}
-              onUpdate={(self) => processPhoneGeometry(self, setTextSizePhone)}
-            >
-              {phoneText}
-              <meshStandardMaterial color={materialColor} roughness={0.4} metalness={0.1} />
-            </Text3D>
-          )}
-
           {/* I LOVE TITLE (Extra) */}
           {isILoveMode && iLoveShape && (
             <group 
@@ -563,16 +545,49 @@ export const Scene3D = ({
             )
           )}
 
-          {/* TABAN PLAKASI */}
-          <mesh 
-            name="BasePlate" 
-            position={[baseCenterX, 0, baseCenterZ]} 
-            rotation={[-Math.PI / 2, 0, 0]}
-            receiveShadow
-          >
-            <extrudeGeometry args={[baseShape, { depth: baseH, bevelEnabled: false }]} />
-            <meshStandardMaterial color={baseColor || '#334155'} roughness={0.8} />
-          </mesh>
+          {/* TABAN PLAKASI VE CSG OYMA (TELEFON VB.) */}
+          {hasPhoneText && phoneDepth > 0 ? (
+            <mesh 
+              name="BasePlateCSG" 
+              position={[baseCenterX, 0, baseCenterZ]} 
+              rotation={[-Math.PI / 2, 0, 0]}
+              receiveShadow
+            >
+              <Geometry>
+                <Base>
+                  <extrudeGeometry args={[baseShape, { depth: baseH, bevelEnabled: false }]} />
+                </Base>
+                <Subtraction 
+                  position={[0, 0, -0.1]} 
+                  scale={[-1, 1, 1]} 
+                >
+                  <Text3D
+                    name="TextPhoneCSG"
+                    key={`phone-csg-${phoneText}-${phoneDepth}-${scaleRatio}-${fontFamily}`}
+                    font={fontPath}
+                    size={phoneLetterSize}
+                    height={phoneDepth + 0.2} // Kesin kesmesi icin 0.2 fazlalık
+                    curveSegments={16}
+                    bevelEnabled={false}
+                    onUpdate={(self) => processPhoneCSGGeometry(self, setTextSizePhone)}
+                  >
+                    {phoneText}
+                  </Text3D>
+                </Subtraction>
+              </Geometry>
+              <meshStandardMaterial color={baseColor || '#334155'} roughness={0.8} />
+            </mesh>
+          ) : (
+            <mesh 
+              name="BasePlate" 
+              position={[baseCenterX, 0, baseCenterZ]} 
+              rotation={[-Math.PI / 2, 0, 0]}
+              receiveShadow
+            >
+              <extrudeGeometry args={[baseShape, { depth: baseH, bevelEnabled: false }]} />
+              <meshStandardMaterial color={baseColor || '#334155'} roughness={0.8} />
+            </mesh>
+          )}
 
         </group>
 
