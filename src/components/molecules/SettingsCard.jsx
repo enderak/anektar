@@ -14,6 +14,7 @@ export const SettingsCard = ({
   customSvgUrl, setCustomSvgUrl,
   iconPosition, setIconPosition,
   isItalic, setIsItalic,
+  textStyle, setTextStyle,
   textDepth, setTextDepth,
   materialColor, setMaterialColor,
   baseColor, setBaseColor,
@@ -169,6 +170,17 @@ export const SettingsCard = ({
           />
         </div>
 
+        {/* Yazı Derinliği ve Taban Yüksekliği Uyarısı */}
+        {textStyle === 'engraved' && textDepth >= baseHeight && (
+          <div className="bg-amber-50 border border-amber-200 rounded-xl p-3.5 flex items-start gap-2.5 mt-1 shadow-sm">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-amber-600 shrink-0 mt-0.5"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            <div className="flex flex-col gap-1 text-[11px] text-amber-800 leading-relaxed font-medium">
+              <strong className="font-bold">{t('warning_stencil_title')}</strong>
+              {t('warning_stencil_desc')}
+            </div>
+          </div>
+        )}
+
         {/* İtalik (Dönüştürme) */}
         <div className="flex flex-col gap-2">
           <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">{t('transform')}</label>
@@ -188,6 +200,29 @@ export const SettingsCard = ({
               }`}
             >
               {t('italic')}
+            </button>
+          </div>
+        </div>
+
+        {/* Yazı Tarzı (Text Style) */}
+        <div className="flex flex-col gap-2">
+          <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">{t('text_style')}</label>
+          <div className="bg-slate-100/80 p-1 rounded-xl flex items-center h-11 w-full relative">
+            <button 
+              onClick={() => setTextStyle('embossed')}
+              className={`z-10 flex-1 text-[11px] font-bold tracking-wider rounded-lg h-full transition-colors ${
+                textStyle === 'embossed' ? 'bg-white shadow-sm text-slate-800' : 'text-slate-400 hover:text-slate-600'
+              }`}
+            >
+              {t('style_embossed')}
+            </button>
+            <button 
+              onClick={() => setTextStyle('engraved')}
+              className={`z-10 flex-1 text-[11px] font-bold tracking-wider rounded-lg h-full transition-colors ${
+                textStyle === 'engraved' ? 'bg-white shadow-sm text-slate-800' : 'text-slate-400 hover:text-slate-600'
+              }`}
+            >
+              {t('style_engraved')}
             </button>
           </div>
         </div>
@@ -389,14 +424,17 @@ export const SettingsCard = ({
               { id: 'bottom_left', label: 'hole_bottom_left' },
               { id: 'top_right', label: 'hole_top_right' },
               { id: 'center_right', label: 'hole_center_right' },
-              { id: 'bottom_right', label: 'hole_bottom_right' }
+              { id: 'bottom_right', label: 'hole_bottom_right' },
+              { id: 'none', label: 'hole_none', fullWidth: true }
             ].map(pos => (
               <button
                 key={pos.id}
                 onClick={() => setHolePosition(pos.id)}
                 className={`py-2 px-3 text-[11px] font-bold rounded-xl transition-all border ${
+                  pos.fullWidth ? 'col-span-2 py-2.5' : ''
+                } ${
                   holePosition === pos.id 
-                    ? 'bg-emerald-50 text-emerald-700 border-emerald-200 shadow-sm' 
+                    ? 'bg-emerald-50 text-emerald-700 border-emerald-200 shadow-sm font-extrabold' 
                     : 'bg-white text-slate-500 border-slate-200 hover:border-slate-300 hover:bg-slate-50'
                 }`}
               >

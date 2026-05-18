@@ -13,6 +13,7 @@ const App = () => {
   const [phoneDepth, setPhoneDepth] = useState(0.6); // Arka Yüz Oyma Derinliği
   const [isILoveMode, setIsILoveMode] = useState(false); // I Love Formatı
   const [isItalic, setIsItalic] = useState(false); // İtalik Yazı
+  const [textStyle, setTextStyle] = useState('embossed'); // 'embossed' or 'engraved' (Kabartma / Gömülü)
   const [fontFamily, setFontFamily] = useState('droid'); // optimer, helvetiker, droid
   const [iconType, setIconType] = useState('none'); // none, clover, star_crescent, skull, heart, custom
   const [customSvgUrl, setCustomSvgUrl] = useState(null); // Özel SVG Data URL
@@ -106,6 +107,8 @@ const App = () => {
             setIconPosition={setIconPosition}
             isItalic={isItalic}
             setIsItalic={setIsItalic}
+            textStyle={textStyle}
+            setTextStyle={setTextStyle}
             textDepth={textDepth}
             setTextDepth={setTextDepth}
             materialColor={materialColor}
@@ -128,7 +131,7 @@ const App = () => {
             setBaseHeight={setBaseHeight}
             targetWidth={targetWidth}
             setTargetWidth={setTargetWidth}
-            onExport={(isMultiColor) => handleExport(groupRef, text, isMultiColor)}
+            onExport={(isMultiColor) => handleExport(groupRef, text, isMultiColor, textStyle)}
           />
 
           {/* AMS Bilgi Kutusu */}
@@ -145,7 +148,7 @@ const App = () => {
         </div>
 
         {/* Right Column: 3D Canvas */}
-        <div className="flex-1 w-full flex flex-col items-center justify-center relative min-h-[500px] md:min-h-0 bg-white md:bg-transparent rounded-3xl overflow-hidden shadow-sm md:shadow-none mb-8 md:mb-0">
+        <div className="flex-1 w-full flex flex-col items-center justify-start relative h-[400px] md:h-[500px] md:sticky md:top-4 md:self-start bg-white md:bg-transparent rounded-3xl overflow-hidden shadow-sm md:shadow-none mb-8 md:mb-0">
           
           {/* Canvas View Options Toolbar */}
           <div className="absolute top-4 w-full px-6 flex justify-between items-center z-10 font-medium text-slate-600 text-xs pointer-events-none">
@@ -183,6 +186,7 @@ const App = () => {
                 customSvgUrl={customSvgUrl}
                 iconPosition={iconPosition}
                 isItalic={isItalic}
+                textStyle={textStyle}
                 textDepth={textDepth}
                 groupRef={groupRef}
                 materialColor={materialColor}

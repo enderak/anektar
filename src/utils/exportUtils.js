@@ -1,6 +1,8 @@
 // src/utils/exportUtils.js — v6.0.0 (3-file AMS with physical mesh separation)
 import { STLExporter } from 'three/examples/jsm/exporters/STLExporter';
 import JSZip from 'jszip';
+import { Evaluator, Brush, SUBTRACTION } from 'three-bvh-csg';
+import * as THREE from 'three';
 
 function downloadBlob(blob, filename) {
   const link = document.createElement('a');
@@ -15,7 +17,7 @@ function downloadBlob(blob, filename) {
   }, 100);
 }
 
-export const handleExport = (groupRef, fileName = "SAKRAD_Isimlik", isMultiColor = false) => {
+export const handleExport = (groupRef, fileName = "SAKRAD_Isimlik", isMultiColor = false, textStyle = 'embossed') => {
   if (!groupRef.current) return;
 
   const exporter = new STLExporter();
@@ -92,9 +94,95 @@ export const handleExport = (groupRef, fileName = "SAKRAD_Isimlik", isMultiColor
 
   } else {
     try {
+      const allChildren = [...groupRef.current.children];
+      const baseMesh = allChildren.find(c => c.name === 'BasePlate');
+      const isPocketStyle = textStyle === 'engraved' || textStyle === 'carved';
+      
+      let originalBaseGeometry = null;
+
+      if (isPocketStyle && baseMesh) {
+        // Backup the original geometry to restore later
+        originalBaseGeometry = baseMesh.geometry.clone();
+
+        // Collect all meshes to subtract (everything except BasePlate)
+        const subMeshes = collectMeshes(groupRef.current).filter(m => m.name !== 'BasePlate');
+
+        if (subMeshes.length > 0) {
+          const evaluator = new Evaluator();
+
+          const ensureGeometryIndexed = (geom) => {
+            if (geom.index) return geom;
+            const posCount = geom.attributes.position.count;
+            const indices = Array.from({ length: posCount }, (_, i) => i);
+            geom.setIndex(indices);
+            return geom;
+          };
+
+          ensureGeometryIndexed(baseMesh.geometry);
+          let baseBrush = new Brush(baseMesh.geometry, baseMesh.material);
+          baseBrush.position.copy(baseMesh.position);
+          baseBrush.rotation.copy(baseMesh.rotation);
+          baseBrush.scale.copy(baseMesh.scale);
+          baseBrush.updateMatrixWorld(true);
+
+          for (const subMesh of subMeshes) {
+            if (subMesh.visible === false) continue;
+
+            const subGeom = subMesh.geometry.clone();
+            ensureGeometryIndexed(subGeom);
+
+            let subBrush = new Brush(subGeom, subMesh.material);
+            subBrush.position.copy(subMesh.position);
+            subBrush.rotation.copy(subMesh.rotation);
+            subBrush.scale.copy(subMesh.scale);
+
+            // Handle nested group transformations if any (e.g. TextIconGroup, ILoveGroup)
+            if (subMesh.parent && subMesh.parent !== groupRef.current) {
+              const parentPos = new THREE.Vector3();
+              const parentRot = new THREE.Quaternion();
+              const parentScl = new THREE.Vector3();
+              subMesh.parent.updateMatrixWorld(true);
+              subMesh.parent.matrixWorld.decompose(parentPos, parentRot, parentScl);
+              
+              // Apply world transformations relative to the container group
+              const worldPos = new THREE.Vector3();
+              const worldRot = new THREE.Quaternion();
+              const worldScl = new THREE.Vector3();
+              subMesh.matrixWorld.decompose(worldPos, worldRot, worldScl);
+              
+              // Map to local group coordinates
+              const localMatrix = groupRef.current.matrixWorld.clone().invert().multiply(subMesh.matrixWorld);
+              localMatrix.decompose(subBrush.position, subBrush.quaternion, subBrush.scale);
+            }
+            subBrush.updateMatrixWorld(true);
+
+            // Perform physical subtraction
+            baseBrush = evaluator.evaluate(baseBrush, subBrush, SUBTRACTION);
+          }
+
+          // Apply subtracted geometry to base mesh
+          baseMesh.geometry = baseBrush.geometry;
+        }
+
+        // Export only the subtracted BasePlate
+        groupRef.current.children = [baseMesh];
+        groupRef.current.updateMatrixWorld(true);
+      }
+
+      // Generate the single-color STL
       const result = exporter.parse(groupRef.current, { binary: true });
       const blob = new Blob([stlBuf(result)], { type: 'application/octet-stream' });
       downloadBlob(blob, `${fileName}_${new Date().getTime()}.stl`);
+
+      // Restore original state
+      if (isPocketStyle && baseMesh) {
+        if (originalBaseGeometry) {
+          baseMesh.geometry.dispose();
+          baseMesh.geometry = originalBaseGeometry;
+        }
+        groupRef.current.children = allChildren;
+        groupRef.current.updateMatrixWorld(true);
+      }
     } catch (err) {
       console.error('STL Export Error:', err);
       alert('STL dışa aktarma hatası: ' + err.message);
