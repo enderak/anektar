@@ -195,6 +195,7 @@ export const Scene3D = ({
   const fontPath = useMemo(() => {
     if (fontFamily === 'helvetiker') return "/fonts/helvetiker_bold.typeface.json";
     if (fontFamily === 'droid') return "/fonts/droid_sans_bold.typeface.json";
+    if (fontFamily === 'jakarta') return "/fonts/Plus_Jakarta_Sans_Bold.json";
     return "/fonts/optimer_bold.typeface.json";
   }, [fontFamily]);
 
