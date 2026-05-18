@@ -17,7 +17,7 @@ function downloadBlob(blob, filename) {
   }, 100);
 }
 
-export const handleExport = (groupRef, fileName = "SAKRAD_Isimlik", isMultiColor = false, textStyle = 'embossed') => {
+export const handleExport = (groupRef, fileName = "SAKRAD_Isimlik", isMultiColor = false, textStyle = 'embossed', baseHeight = 3.0) => {
   if (!groupRef.current) return;
 
   const exporter = new STLExporter();
@@ -99,10 +99,16 @@ export const handleExport = (groupRef, fileName = "SAKRAD_Isimlik", isMultiColor
       const isPocketStyle = textStyle === 'engraved' || textStyle === 'carved';
       
       let originalBaseGeometry = null;
+      let originalBasePosition = null;
+      let originalBaseRotation = null;
+      let originalBaseScale = null;
 
       if (isPocketStyle && baseMesh) {
         // Backup the original geometry to restore later
         originalBaseGeometry = baseMesh.geometry.clone();
+        originalBasePosition = baseMesh.position.clone();
+        originalBaseRotation = baseMesh.rotation.clone();
+        originalBaseScale = baseMesh.scale.clone();
 
         // Collect all meshes to subtract (everything except BasePlate)
         const subMeshes = collectMeshes(groupRef.current).filter(m => m.name !== 'BasePlate');
@@ -131,29 +137,37 @@ export const handleExport = (groupRef, fileName = "SAKRAD_Isimlik", isMultiColor
             const subGeom = subMesh.geometry.clone();
             ensureGeometryIndexed(subGeom);
 
-            let subBrush = new Brush(subGeom, subMesh.material);
-            subBrush.position.copy(subMesh.position);
-            subBrush.rotation.copy(subMesh.rotation);
-            subBrush.scale.copy(subMesh.scale);
+            // Bake all parent and nested group transformations directly into the geometry
+            subMesh.updateMatrixWorld(true);
+            const localMatrix = groupRef.current.matrixWorld.clone().invert().multiply(subMesh.matrixWorld);
+            subGeom.applyMatrix4(localMatrix);
 
-            // Handle nested group transformations if any (e.g. TextIconGroup, ILoveGroup)
-            if (subMesh.parent && subMesh.parent !== groupRef.current) {
-              const parentPos = new THREE.Vector3();
-              const parentRot = new THREE.Quaternion();
-              const parentScl = new THREE.Vector3();
-              subMesh.parent.updateMatrixWorld(true);
-              subMesh.parent.matrixWorld.decompose(parentPos, parentRot, parentScl);
-              
-              // Apply world transformations relative to the container group
-              const worldPos = new THREE.Vector3();
-              const worldRot = new THREE.Quaternion();
-              const worldScl = new THREE.Vector3();
-              subMesh.matrixWorld.decompose(worldPos, worldRot, worldScl);
-              
-              // Map to local group coordinates
-              const localMatrix = groupRef.current.matrixWorld.clone().invert().multiply(subMesh.matrixWorld);
-              localMatrix.decompose(subBrush.position, subBrush.quaternion, subBrush.scale);
+            if (isPocketStyle) {
+              // Prevent coplanar surface overlapping (which causes CSG triangulation errors).
+              // Pull top vertices (Y close to baseHeight) slightly higher,
+              // and bottom vertices (Y close to 0) slightly lower.
+              const posAttr = subGeom.attributes.position;
+              if (posAttr) {
+                for (let i = 0; i < posAttr.count; i++) {
+                  let y = posAttr.getY(i);
+                  if (y > baseHeight - 0.1) {
+                    posAttr.setY(i, y + 1.5);
+                  } else if (y < 0.1) {
+                    posAttr.setY(i, y - 1.5);
+                  }
+                }
+                posAttr.needsUpdate = true;
+                subGeom.computeVertexNormals();
+                subGeom.computeBoundingBox();
+                subGeom.computeBoundingSphere();
+              }
             }
+
+            // Since transformations are baked, position/rotation/scale remain identity
+            let subBrush = new Brush(subGeom, subMesh.material);
+            subBrush.position.set(0, 0, 0);
+            subBrush.rotation.set(0, 0, 0);
+            subBrush.scale.set(1, 1, 1);
             subBrush.updateMatrixWorld(true);
 
             // Perform physical subtraction
@@ -162,6 +176,9 @@ export const handleExport = (groupRef, fileName = "SAKRAD_Isimlik", isMultiColor
 
           // Apply subtracted geometry to base mesh
           baseMesh.geometry = baseBrush.geometry;
+          baseMesh.position.set(0, 0, 0);
+          baseMesh.rotation.set(0, 0, 0);
+          baseMesh.scale.set(1, 1, 1);
         }
 
         // Export only the subtracted BasePlate
@@ -180,6 +197,9 @@ export const handleExport = (groupRef, fileName = "SAKRAD_Isimlik", isMultiColor
           baseMesh.geometry.dispose();
           baseMesh.geometry = originalBaseGeometry;
         }
+        if (originalBasePosition) baseMesh.position.copy(originalBasePosition);
+        if (originalBaseRotation) baseMesh.rotation.copy(originalBaseRotation);
+        if (originalBaseScale) baseMesh.scale.copy(originalBaseScale);
         groupRef.current.children = allChildren;
         groupRef.current.updateMatrixWorld(true);
       }

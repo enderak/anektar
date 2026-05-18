@@ -18,7 +18,8 @@ const App = () => {
   const [iconType, setIconType] = useState('none'); // none, clover, star_crescent, skull, heart, custom
   const [customSvgUrl, setCustomSvgUrl] = useState(null); // Özel SVG Data URL
   const [iconPosition, setIconPosition] = useState('left'); // left, right
-  const [textDepth, setTextDepth] = useState(2.0); // Yazı kalınlığı (mm)
+  const [textDepth, setTextDepth] = useState(1.2); // Kabartma Yüksekliği (mm)
+  const [engraveDepth, setEngraveDepth] = useState(1.0); // Gömme Derinliği (mm)
   const [materialColor, setMaterialColor] = useState('#22C55E'); // Yazı Rengi
   const [baseColor, setBaseColor] = useState('#0F172A'); // Taban Rengi
   const [baseShape, setBaseShape] = useState('rectangle'); // Taban Şekli
@@ -111,6 +112,8 @@ const App = () => {
             setTextStyle={setTextStyle}
             textDepth={textDepth}
             setTextDepth={setTextDepth}
+            engraveDepth={engraveDepth}
+            setEngraveDepth={setEngraveDepth}
             materialColor={materialColor}
             setMaterialColor={setMaterialColor}
             baseColor={baseColor}
@@ -131,7 +134,7 @@ const App = () => {
             setBaseHeight={setBaseHeight}
             targetWidth={targetWidth}
             setTargetWidth={setTargetWidth}
-            onExport={(isMultiColor) => handleExport(groupRef, text, isMultiColor, textStyle)}
+            onExport={(isMultiColor) => handleExport(groupRef, text, isMultiColor, textStyle, baseHeight)}
           />
 
           {/* AMS Bilgi Kutusu */}
@@ -188,6 +191,7 @@ const App = () => {
                 isItalic={isItalic}
                 textStyle={textStyle}
                 textDepth={textDepth}
+                engraveDepth={engraveDepth}
                 groupRef={groupRef}
                 materialColor={materialColor}
                 baseColor={baseColor}

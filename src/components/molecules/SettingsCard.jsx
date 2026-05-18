@@ -16,6 +16,7 @@ export const SettingsCard = ({
   isItalic, setIsItalic,
   textStyle, setTextStyle,
   textDepth, setTextDepth,
+  engraveDepth, setEngraveDepth,
   materialColor, setMaterialColor,
   baseColor, setBaseColor,
   baseShape, setBaseShape,
@@ -154,24 +155,40 @@ export const SettingsCard = ({
         </label>
       </div>
 
-      {/* Yazı Derinliği (Çıkıntı yüksekliği) */}
+       {/* Yazı Derinliği (Çıkıntı yüksekliği / Gömme derinliği) */}
       <div className="flex flex-col gap-4 mt-2">
-        <div className="flex flex-col gap-3">
-          <div className="flex justify-between items-center text-[10px] font-bold text-slate-500">
-            <span>{t('text_depth')}</span>
-            <span>{textDepth.toFixed(1)}mm</span>
+        {textStyle === 'embossed' ? (
+          <div className="flex flex-col gap-3">
+            <div className="flex justify-between items-center text-[10px] font-bold text-slate-500">
+              <span>{t('text_depth')}</span>
+              <span>{textDepth.toFixed(1)}mm</span>
+            </div>
+            <input 
+              type="range" 
+              min="0.4" max="3.0" step="0.2"
+              value={textDepth}
+              onChange={(e) => setTextDepth(parseFloat(e.target.value))}
+              className="w-full h-1 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-emerald-600 outline-none"
+            />
           </div>
-          <input 
-            type="range" 
-            min="0.5" max="5.0" step="0.5"
-            value={textDepth}
-            onChange={(e) => setTextDepth(parseFloat(e.target.value))}
-            className="w-full h-1 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-emerald-600 outline-none"
-          />
-        </div>
+        ) : (
+          <div className="flex flex-col gap-3">
+            <div className="flex justify-between items-center text-[10px] font-bold text-slate-500">
+              <span>{t('engrave_depth')}</span>
+              <span>{engraveDepth.toFixed(1)}mm</span>
+            </div>
+            <input 
+              type="range" 
+              min="0.4" max="3.0" step="0.2"
+              value={engraveDepth}
+              onChange={(e) => setEngraveDepth(parseFloat(e.target.value))}
+              className="w-full h-1 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-emerald-600 outline-none"
+            />
+          </div>
+        )}
 
         {/* Yazı Derinliği ve Taban Yüksekliği Uyarısı */}
-        {textStyle === 'engraved' && textDepth >= baseHeight && (
+        {textStyle === 'engraved' && engraveDepth >= baseHeight && (
           <div className="bg-amber-50 border border-amber-200 rounded-xl p-3.5 flex items-start gap-2.5 mt-1 shadow-sm">
             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-amber-600 shrink-0 mt-0.5"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
             <div className="flex flex-col gap-1 text-[11px] text-amber-800 leading-relaxed font-medium">
@@ -180,6 +197,7 @@ export const SettingsCard = ({
             </div>
           </div>
         )}
+      </div>
 
         {/* İtalik (Dönüştürme) */}
         <div className="flex flex-col gap-2">
@@ -529,6 +547,5 @@ export const SettingsCard = ({
       </div>
 
     </div>
-  </div>
   );
 };

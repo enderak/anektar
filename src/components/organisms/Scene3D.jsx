@@ -131,7 +131,9 @@ export const Scene3D = ({
   customSvgUrl,
   iconPosition,
   isItalic,
+  textStyle,
   textDepth,
+  engraveDepth,
   groupRef,
   materialColor,
   baseColor,
@@ -171,6 +173,9 @@ export const Scene3D = ({
   const letterSize = 30.0 * scaleRatio;         
   const phoneLetterSize = 18.0 * scaleRatio; // Telefon numarası daha küçük olsun
   const baseH = baseHeight;        
+  const isPocket = textStyle === 'engraved';
+  const currentDepth = isPocket ? engraveDepth : textDepth;
+  const startY = isPocket ? (baseHeight - engraveDepth) : baseHeight;
 
   const hasSubText = subText && subText.trim().length > 0;
   const hasPhoneText = phoneText && phoneText.trim().length > 0;
@@ -403,7 +408,7 @@ export const Scene3D = ({
       self.geometry.rotateX(-Math.PI / 2);
       
       // Z ekseninde yerleşim
-      self.geometry.translate(textX, baseH, yOffset);
+      self.geometry.translate(textX, startY, yOffset);
 
       self.geometry.computeVertexNormals();
       self.geometry.computeBoundingBox();
@@ -470,10 +475,10 @@ export const Scene3D = ({
           {text && text.trim().length > 0 && (
             <Text3D
               name="TextMain"
-              key={`main-${text}-${textDepth}-${baseHeight}-${scaleRatio}-${hasSubText}-${isItalic}-${fontFamily}-${hasIcon}`}
+              key={`main-${text}-${currentDepth}-${textStyle}-${baseHeight}-${scaleRatio}-${hasSubText}-${isItalic}-${fontFamily}-${hasIcon}`}
               font={fontPath}
               size={letterSize}
-              height={textDepth} // textDepth kullanılıyor
+              height={currentDepth} 
               curveSegments={16}
               bevelEnabled={false}
               onUpdate={(self) => processTextGeometry(self, setTextSizeMain, textMainZ)}
@@ -487,10 +492,10 @@ export const Scene3D = ({
           {hasSubText && (
             <Text3D
               name="TextSub"
-              key={`sub-${subText}-${textDepth}-${baseHeight}-${scaleRatio}-${isItalic}-${fontFamily}-${hasIcon}`}
+              key={`sub-${subText}-${currentDepth}-${textStyle}-${baseHeight}-${scaleRatio}-${isItalic}-${fontFamily}-${hasIcon}`}
               font={fontPath}
               size={letterSize}
-              height={textDepth} 
+              height={currentDepth} 
               curveSegments={16}
               bevelEnabled={false}
               onUpdate={(self) => processTextGeometry(self, setTextSizeSub, textSubZ)}
@@ -522,15 +527,15 @@ export const Scene3D = ({
           {/* I LOVE TITLE (Extra) */}
           {isILoveMode && iLoveShape && (
             <group 
-              key={`ilove-${textDepth}-${baseHeight}-${scaleRatio}-${isItalic}-${letterSize}`}
+              key={`ilove-${currentDepth}-${textStyle}-${baseHeight}-${scaleRatio}-${isItalic}-${letterSize}`}
               name="ILoveGroup"
-              position={[iLoveX, baseH, iLoveZ]}
+              position={[iLoveX, startY, iLoveZ]}
               rotation={[-Math.PI / 2, 0, 0]}
               scale={[1, 1, 1]}
             >
               {iLoveShape.map((shape, idx) => (
                 <mesh key={idx} name={`ILoveIcon_${idx}`}>
-                  <extrudeGeometry args={[shape, { depth: textDepth, bevelEnabled: false }]} />
+                  <extrudeGeometry args={[shape, { depth: currentDepth, bevelEnabled: false }]} />
                   <meshStandardMaterial color={idx === 1 ? '#EF4444' : materialColor} roughness={0.4} metalness={0.1} />
                 </mesh>
               ))}
@@ -541,28 +546,28 @@ export const Scene3D = ({
           {hasIcon && (
             Array.isArray(iconShape) ? (
               <group
-                key={`icon-${iconType}-${textDepth}-${baseHeight}-${scaleRatio}-${isItalic}-${iconPosition}-${letterSize}`}
+                key={`icon-${iconType}-${currentDepth}-${textStyle}-${baseHeight}-${scaleRatio}-${isItalic}-${iconPosition}-${letterSize}`}
                 name="TextIconGroup"
-                position={[iconX, baseH, iconZ]}
+                position={[iconX, startY, iconZ]}
                 rotation={[-Math.PI / 2, 0, 0]}
                 scale={[iconScale, iconScale, 1]}
               >
                 {iconShape.map((shape, idx) => (
                   <mesh key={idx} name={`TextIcon_${idx}`}>
-                    <extrudeGeometry args={[shape, { depth: textDepth, bevelEnabled: false }]} />
+                    <extrudeGeometry args={[shape, { depth: currentDepth, bevelEnabled: false }]} />
                     <meshStandardMaterial color={materialColor} roughness={0.4} metalness={0.1} />
                   </mesh>
                 ))}
               </group>
             ) : (
               <mesh 
-                key={`icon-${iconType}-${textDepth}-${baseHeight}-${scaleRatio}-${isItalic}-${iconPosition}-${letterSize}`}
+                key={`icon-${iconType}-${currentDepth}-${textStyle}-${baseHeight}-${scaleRatio}-${isItalic}-${iconPosition}-${letterSize}`}
                 name="TextIcon"
-                position={[iconX, baseH, iconZ]}
+                position={[iconX, startY, iconZ]}
                 rotation={[-Math.PI / 2, 0, 0]}
                 scale={[iconScale, iconScale, 1]}
               >
-                <extrudeGeometry args={[iconShape, { depth: textDepth, bevelEnabled: false }]} />
+                <extrudeGeometry args={[iconShape, { depth: currentDepth, bevelEnabled: false }]} />
                 <meshStandardMaterial color={materialColor} roughness={0.4} metalness={0.1} />
               </mesh>
             )
