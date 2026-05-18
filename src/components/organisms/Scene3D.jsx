@@ -337,6 +337,8 @@ export const Scene3D = ({
     holeZ = 0;
   }
 
+  const holeConfig = holePosition === 'none' ? null : { x: holeX, y: holeZ, r: holeR };
+
   const innerScale = targetWidth ? (targetWidth / baseW) : 1;
   const scaledCenterZ = baseCenterZ * innerScale;
   const scaledBaseW = baseW * innerScale;
@@ -362,22 +364,22 @@ export const Scene3D = ({
         extraShapes: isILoveMode && iLoveShape ? [
           { shape: iLoveShape, x: iLoveX, y: -iLoveZ, scale: 1.0 }
         ] : [],
-        holeConfig: { x: holeX, y: holeZ, r: holeR },
+        holeConfig: holeConfig,
         offsetRadius: 5.0 // 5mm contour padding
       });
     } else if (selectedShape === 'heart') {
-      return createHeartBaseShape(baseW, baseD, { x: holeX, y: holeZ, r: holeR });
+      return createHeartBaseShape(baseW, baseD, holeConfig);
     } else if (selectedShape === 'teardrop') {
-      return createTeardropShape(baseW, baseD, isLeft, { x: holeX, y: holeZ, r: holeR });
+      return createTeardropShape(baseW, baseD, isLeft, holeConfig);
     } else {
       return createRoundedRectShape(
         baseW, 
         baseD, 
         Math.min(5, baseW/2, baseD/2), 
-        { x: holeX, y: holeZ, r: holeR }
+        holeConfig
       );
     }
-  }, [selectedShape, baseW, baseD, isLeft, holeX, holeZ, holeR]);
+  }, [selectedShape, baseW, baseD, isLeft, holeConfig]);
 
 
 
