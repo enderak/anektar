@@ -91,6 +91,36 @@ export const SettingsCard = ({
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg>
             </div>
           </div>
+
+          {/* Türkçe Karakter Uyumluluk Uyarısı */}
+          {(() => {
+            const fullText = `${text || ''} ${subText || ''}`;
+            const trChars = ['Ç', 'Ğ', 'İ', 'Ö', 'Ş', 'Ü', 'ç', 'ğ', 'ı', 'ö', 'ş', 'ü'];
+            const hasTr = trChars.some(char => fullText.includes(char));
+            
+            if (hasTr) {
+              if (fontFamily === 'helvetiker') {
+                return (
+                  <div className="text-[11px] text-amber-600 bg-amber-50 border border-amber-100 p-2.5 rounded-xl font-medium leading-normal mt-1 flex gap-2 items-start">
+                    <span className="shrink-0 mt-0.5">⚠️</span>
+                    <span>{t('warning_font_turkish')}</span>
+                  </div>
+                );
+              } else if (fontFamily === 'optimer') {
+                const optimerMissing = ['Ç', 'Ğ', 'İ', 'Ş', 'ğ', 'ı', 'ş'];
+                const hasOptimerMissing = optimerMissing.some(char => fullText.includes(char));
+                if (hasOptimerMissing) {
+                  return (
+                    <div className="text-[11px] text-amber-600 bg-amber-50 border border-amber-100 p-2.5 rounded-xl font-medium leading-normal mt-1 flex gap-2 items-start">
+                      <span className="shrink-0 mt-0.5">⚠️</span>
+                      <span>{t('warning_font_turkish')}</span>
+                    </div>
+                  );
+                }
+              }
+            }
+            return null;
+          })()}
         </div>
 
         {/* Text Inputs */}

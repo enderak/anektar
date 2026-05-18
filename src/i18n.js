@@ -79,7 +79,8 @@ const resources = {
       "export_multi": "Çift Renk (AMS) STL İndir",
       "ams_tip_title": "Çoklu Renk (AMS) Baskı",
       "ams_tip": "İndirdiğiniz ZIP dosyasındaki iki parçayı Bambu Studio'ya aynı anda sürükleyin. 'Tek obje olarak yüklensin mi?' sorusuna EVET deyin. Sol taraftaki Objeler (Objects) panelinden parçalara sağ tıklayıp farklı renk (flament) atayabilirsiniz.",
-      "ignore_cantilever": "⚠️ Not: Bambu Studio'da 'Yüzen konsol var' (Floating cantilever) uyarısı alırsanız endişelenmeyin! Bu bir hata değildir; 'T' ve 'E' gibi yatay kollara sahip harflerin doğası gereği altının boş olmasından kaynaklanır. Uyarıyı yoksayıp basabilir veya dilerseniz 'Destek (Support)' açarak yazdırabilirsiniz."
+      "ignore_cantilever": "⚠️ Not: Bambu Studio'da 'Yüzen konsol var' (Floating cantilever) uyarısı alırsanız endişelenmeyin! Bu bir hata değildir; 'T' ve 'E' gibi yatay kollara sahip harflerin doğası gereği altının boş olmasından kaynaklanır. Uyarıyı yoksayıp basabilir veya dilerseniz 'Destek (Support)' açarak yazdırabilirsiniz.",
+      "warning_font_turkish": "⚠️ Seçtiğiniz yazı tipi Türkçe karakterleri (ş, ğ, ı, vb.) tam desteklememektedir. Harflerin düzgün basılması ve görüntülenmesi için varsayılan 'Droid Sans' yazı tipini kullanmanızı öneririz."
     }
   },
   EN: {
@@ -159,7 +160,8 @@ const resources = {
       "export_multi": "Download Dual-Color (AMS) ZIP",
       "ams_tip_title": "Multi-Color (AMS) Printing",
       "ams_tip": "Drag both pieces from the downloaded ZIP into Bambu Studio simultaneously. Click YES when asked 'Load as single object?'. You can assign different colors by right-clicking parts in the Objects panel on the left.",
-      "ignore_cantilever": "⚠️ Note: If Bambu Studio shows a 'Floating cantilever' warning, don't panic! It's not a bug; it's the natural geometry of letters with horizontal arms (like 'T' or 'E'). You can safely ignore the warning or enable supports if preferred."
+      "ignore_cantilever": "⚠️ Note: If Bambu Studio shows a 'Floating cantilever' warning, don't panic! It's not a bug; it's the natural geometry of letters with horizontal arms (like 'T' or 'E'). You can safely ignore the warning or enable supports if preferred.",
+      "warning_font_turkish": "⚠️ The selected font does not fully support Turkish characters (ş, ğ, ı, etc.). For perfect rendering and printing, we recommend using the default 'Droid Sans' font."
     }
   },
   DE: {
@@ -235,7 +237,8 @@ const resources = {
       "export_multi": "Zweifarbige (AMS) ZIP herunterladen",
       "ams_tip_title": "Mehrfarbiger (AMS) Druck",
       "ams_tip": "Ziehen Sie beide Dateien aus der heruntergeladenen ZIP-Datei gleichzeitig in Bambu Studio. Klicken Sie auf JA, wenn Sie gefragt werden: 'Als einzelnes Objekt laden?'. Sie können verschiedene Farben zuweisen, indem Sie im Objektabschitt mit der rechten Maustaste klicken.",
-      "ignore_cantilever": "⚠️ Hinweis: Keine Panik bei 'Floating cantilever' (schwebender Überhang) Warnungen! Dies ist kein Bug, sondern resultiert aus Buchstaben mit waagrechten Armen (wie 'T' oder 'E'). Ignorieren Sie die Warnung oder aktivieren Sie Stützstrukturen."
+      "ignore_cantilever": "⚠️ Hinweis: Keine Panik bei 'Floating cantilever' (schwebender Überhang) Warnungen! Dies ist kein Bug, sondern resultiert aus Buchstaben mit waagrechten Armen (wie 'T' oder 'E'). Ignorieren Sie die Warnung oder aktivieren Sie Stützstrukturen.",
+      "warning_font_turkish": "⚠️ Die ausgewählte Schriftart unterstützt türkische Zeichen (ş, ğ, ı, etc.) nicht vollständig. Für eine korrekte Darstellung und Druck empfehlen wir die Standard-Schriftart 'Droid Sans'."
     }
   },
   AZ: {
@@ -311,7 +314,8 @@ const resources = {
       "export_multi": "Çox Rəngli (AMS) ZIP Yüklə",
       "ams_tip_title": "Çox Rəngli (AMS) Çap",
       "ams_tip": "Yüklədiyiniz ZIP faylındakı iki parçanı eyni anda Bambu Studio-ya sürükləyin. 'Tək obyekt kimi yüklənsin?' sualına BƏLİ deyin. Sol tərəfdəki Obyektlər panelindən hissələrə sağ klikləməklə müxtəlif rənglər (filament) təyin edə bilərsiniz.",
-      "ignore_cantilever": "⚠️ Qeyd: Bambu Studio 'Yüzen konsol var' (Floating cantilever) xəbərdarlığını verərsə narahat olmayın! Bu səhv deyil; 'T' və 'E' kimi qolları olan hərflərin havada qalma təbiətidir. Xəbərdarlığa məhəl qoymadan və ya 'Dəstək' (Support) açaraq çap edə bilərsiniz."
+      "ignore_cantilever": "⚠️ Qeyd: Bambu Studio 'Yüzen konsol var' (Floating cantilever) xəbərdarlığını verərsə narahat olmayın! Bu səhv deyil; 'T' ve 'E' kimi qolları olan hərflərin havada qalma təbiətidir. Xəbərdarlığa məhəl qoymadan və ya 'Dəstək' (Support) açaraq çap edə bilərsiniz.",
+      "warning_font_turkish": "⚠️ Seçdiyiniz şrift Azərbaycan/Türk hərflərini (ş, ğ, ı, vb.) tam dəstəkləmir. Düzgün çap və görünüş üçün standart 'Droid Sans' şriftindən istifadə etməyinizi tövsiyə edirik."
     }
   },
   ES: {
@@ -386,7 +390,8 @@ const resources = {
       "export_multi": "Descargar ZIP de Doble Color (AMS)",
       "ams_tip_title": "Impresión Multi-color (AMS)",
       "ams_tip": "Arrastra ambas piezas desde el ZIP descargado a Bambu Studio simultáneamente. Haz clic en SÍ cuando se te pregunte '¿Cargar como un solo objeto?'. Puedes asignar diferentes colores haciendo clic derecho en las piezas en el panel de Objetos a la izquierda.",
-      "ignore_cantilever": "⚠️ Nota: Si Bambu Studio muestra un aviso de 'Voladizo flotante' (Floating cantilever), ¡no entres en pánico! No es un error; es la geometría natural de las letras con brazos horizontales (como 'T' o 'E'). Puedes ignorar el aviso con seguridad o activar soportes si lo prefieres."
+      "ignore_cantilever": "⚠️ Nota: Si Bambu Studio muestra un aviso de 'Voladizo flotante' (Floating cantilever), ¡no entres en pánico! No es un error; es la geometría natural de las letras con brazos horizontales (como 'T' o 'E'). Puedes ignorar el aviso con seguridad o activar soportes si lo prefieres.",
+      "warning_font_turkish": "⚠️ La tipografía seleccionada no es totalmente compatible con caracteres turcos (ş, ğ, ı, etc.). Recomendamos usar la fuente predeterminada 'Droid Sans' para una visualización e impresión perfectas."
     }
   }
 };
