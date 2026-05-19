@@ -17,7 +17,7 @@ function downloadBlob(blob, filename) {
   }, 100);
 }
 
-export const handleExport = (groupRef, fileName = "SAKRAD_Isimlik", isMultiColor = false, textStyle = 'embossed', baseHeight = 3.0) => {
+export const handleExport = (groupRef, fileName = "SAKRAD_Anahtarlik", isMultiColor = false, textStyle = 'embossed', baseHeight = 3.0) => {
   if (!groupRef.current) return;
 
   const exporter = new STLExporter();
