@@ -2,8 +2,10 @@ import React, { useMemo, useState } from 'react';
 import { Text3D, PerspectiveCamera, OrbitControls } from '@react-three/drei';
 import * as THREE from 'three';
 import { FontLoader } from 'three/examples/jsm/loaders/FontLoader.js';
+import { SVGLoader } from 'three/examples/jsm/loaders/SVGLoader.js';
 import { createIconShape } from '../../utils/svgIcons';
 import { createContourBaseShape } from '../../utils/contourUtils';
+import ClipperLib from 'clipper-lib';
 
 const SCALE = 0.05;
 
@@ -120,6 +122,207 @@ const createHeartBaseShape = (width, depth, holeConfig) => {
   return shape;
 };
 
+// ClipperOffset ile taban plakasının içe doğru bükülmüş (offset) halini alarak kenarlık şablonu oluşturma
+const createBorderShape = (baseShape, borderWidth) => {
+  if (!baseShape) return null;
+
+  // 1. Get points of the outer boundary of the base shape
+  const outerPoints = baseShape.getPoints(64);
+  if (outerPoints.length < 3) return null;
+  
+  // 2. Convert to Clipper format (scale up to avoid precision issues)
+  const scale = 1000;
+  const clipperPath = outerPoints.map(p => ({
+    X: Math.round(p.x * scale),
+    Y: Math.round(p.y * scale)
+  }));
+  
+  // Make sure orientation is clockwise or counter-clockwise as expected by Clipper
+  if (!ClipperLib.Clipper.Orientation(clipperPath)) {
+    clipperPath.reverse();
+  }
+  
+  // 3. Offset inwards (negative delta)
+  const co = new ClipperLib.ClipperOffset();
+  co.AddPath(clipperPath, ClipperLib.JoinType.jtRound, ClipperLib.EndType.etClosedPolygon);
+  
+  const offsetPaths = new ClipperLib.Paths();
+  co.Execute(offsetPaths, -borderWidth * scale);
+  
+  // 4. Create the new shape for the border (outer path - inner path as hole)
+  const borderShape = new THREE.Shape();
+  
+  // The outer path of the border is the same as the baseShape outer path
+  outerPoints.forEach((p, idx) => {
+    if (idx === 0) borderShape.moveTo(p.x, p.y);
+    else borderShape.lineTo(p.x, p.y);
+  });
+  borderShape.closePath();
+  
+  // The inner path of the border is the offset path (added as a hole)
+  if (offsetPaths.length > 0) {
+    let maxArea = -1;
+    let mainOffsetPath = null;
+    for (let i = 0; i < offsetPaths.length; i++) {
+      const area = Math.abs(ClipperLib.Clipper.Area(offsetPaths[i]));
+      if (area > maxArea) {
+        maxArea = area;
+        mainOffsetPath = offsetPaths[i];
+      }
+    }
+    
+    if (mainOffsetPath) {
+      const innerPath = new THREE.Path();
+      mainOffsetPath.forEach((pt, idx) => {
+        const px = pt.X / scale;
+        const py = pt.Y / scale;
+        if (idx === 0) innerPath.moveTo(px, py);
+        else innerPath.lineTo(px, py);
+      });
+      innerPath.closePath();
+      borderShape.holes.push(innerPath);
+    }
+  }
+  
+  return borderShape;
+};
+
+// THREE.Shape veya Shape dizisini typeface.json formatındaki glyph'e dönüştürür
+const convertShapeToGlyph = (shapeOrShapes, resolution = 1000) => {
+  const shapes = Array.isArray(shapeOrShapes) ? shapeOrShapes : [shapeOrShapes];
+  
+  let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+  
+  shapes.forEach(shape => {
+    const points = shape.getPoints(32);
+    points.forEach(p => {
+      if (p.x < minX) minX = p.x;
+      if (p.x > maxX) maxX = p.x;
+      if (p.y < minY) minY = p.y;
+      if (p.y > maxY) maxY = p.y;
+    });
+  });
+  
+  if (minX === Infinity || minY === Infinity) {
+    return { ha: 600, o: '' };
+  }
+  
+  const w = maxX - minX;
+  const h = maxY - minY;
+  if (w === 0 || h === 0) return { ha: 600, o: '' };
+  
+  const targetH = 700;
+  const scale = targetH / h;
+  const glyphW = w * scale;
+  const ha = Math.round(glyphW + 160); // 80px left/right padding
+  const offsetX = 80 - minX * scale;
+  const offsetY = -minY * scale; // align bottom to y = 0
+  
+  const fmt = (x, y) => `${Math.round(x * scale + offsetX)} ${Math.round(y * scale + offsetY)}`;
+  
+  let pathStr = '';
+  
+  shapes.forEach(shape => {
+    const points = shape.getPoints(32);
+    if (points.length > 0) {
+      if (pathStr) pathStr += ' ';
+      pathStr += `m ${fmt(points[0].x, points[0].y)}`;
+      for (let i = 1; i < points.length; i++) {
+        pathStr += ` l ${fmt(points[i].x, points[i].y)}`;
+      }
+      
+      const startPt = points[0];
+      const endPt = points[points.length - 1];
+      if (Math.abs(startPt.x - endPt.x) > 0.01 || Math.abs(startPt.y - endPt.y) > 0.01) {
+        pathStr += ` l ${fmt(startPt.x, startPt.y)}`;
+      }
+    }
+    
+    if (shape.holes && shape.holes.length > 0) {
+      shape.holes.forEach(hole => {
+        const holePts = hole.getPoints(32);
+        if (holePts.length > 0) {
+          pathStr += ` m ${fmt(holePts[0].x, holePts[0].y)}`;
+          for (let i = 1; i < holePts.length; i++) {
+            pathStr += ` l ${fmt(holePts[i].x, holePts[i].y)}`;
+          }
+          const hStart = holePts[0];
+          const hEnd = holePts[holePts.length - 1];
+          if (Math.abs(hStart.x - hEnd.x) > 0.01 || Math.abs(hStart.y - hEnd.y) > 0.01) {
+            pathStr += ` l ${fmt(hStart.x, hStart.y)}`;
+          }
+        }
+      });
+    }
+  });
+  
+  return { ha, o: pathStr };
+};
+
+// SVG şekillerini normalize edip 3D sahneye uyarlar
+const normalizeSvgShapes = (shapes, targetSize = 24) => {
+  if (!shapes || shapes.length === 0) return [];
+  
+  let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+  shapes.forEach(shape => {
+    const points = shape.getPoints(16);
+    points.forEach(p => {
+      if (p.x < minX) minX = p.x;
+      if (p.x > maxX) maxX = p.x;
+      if (p.y < minY) minY = p.y;
+      if (p.y > maxY) maxY = p.y;
+    });
+  });
+  
+  const w = maxX - minX;
+  const h = maxY - minY;
+  if (w === 0 || h === 0) return shapes;
+  
+  const maxDim = Math.max(w, h);
+  const scale = targetSize / maxDim;
+  const cx = (minX + maxX) / 2;
+  const cy = (minY + maxY) / 2;
+  
+  return shapes.map(shape => {
+    const newShape = new THREE.Shape();
+    
+    const transformPt = (p) => new THREE.Vector2(
+      (p.x - cx) * scale,
+      -(p.y - cy) * scale // Y-invert for SVG
+    );
+    
+    const outerPts = shape.getPoints(32);
+    if (outerPts.length > 0) {
+      const first = transformPt(outerPts[0]);
+      newShape.moveTo(first.x, first.y);
+      for (let i = 1; i < outerPts.length; i++) {
+        const pt = transformPt(outerPts[i]);
+        newShape.lineTo(pt.x, pt.y);
+      }
+      newShape.closePath();
+    }
+    
+    if (shape.holes && shape.holes.length > 0) {
+      shape.holes.forEach(hole => {
+        const holePts = hole.getPoints(32);
+        if (holePts.length > 0) {
+          const newHole = new THREE.Path();
+          const first = transformPt(holePts[0]);
+          newHole.moveTo(first.x, first.y);
+          for (let i = 1; i < holePts.length; i++) {
+            const pt = transformPt(holePts[i]);
+            newHole.lineTo(pt.x, pt.y);
+          }
+          newHole.closePath();
+          newShape.holes.push(newHole);
+        }
+      });
+    }
+    
+    return newShape;
+  });
+};
+
 export const Scene3D = ({
   text,
   subText,
@@ -144,12 +347,28 @@ export const Scene3D = ({
   autoCenter,
   baseHeight,
   targetWidth,
-  iconScale: customIconScale = 100
+  hasBorder,
+  borderWidth,
+  borderDepth,
+  iconScale: customIconScale = 100,
+  cornerRadius = 5.0,
+  isHoleExternal = false,
+  holeRadius = 3.5,
+  holeThickness = 2.5,
+  holeHeight = 3.0,
+  subTextScale = 80,
+  textAlignment = 'center',
+  textSpacing = 0.0,
+  subTextSpacing = 0.0,
+  borderColor = '#0F172A',
+  subTextColor,
+  mainSubSpacing = 0.3,
 }) => {
   const [textSizeMain, setTextSizeMain] = useState([60, 20, 6]);
   const [textSizeSub, setTextSizeSub] = useState([0, 0, 0]);
   const [textSizePhone, setTextSizePhone] = useState([0, 0, 0]);
-  const [loadedFont, setLoadedFont] = useState(null);
+  const [fontData, setFontData] = useState(null);
+  const [customSvgShape, setCustomSvgShape] = useState(null);
 
   React.useEffect(() => {
     if (!text || text.trim().length === 0) {
@@ -169,13 +388,28 @@ export const Scene3D = ({
     }
   }, [phoneText]);
 
-  const scaleRatio = (textScale || 100) / 100.0;
-  const letterSize = 30.0 * scaleRatio;         
-  const phoneLetterSize = 18.0 * scaleRatio; // Telefon numarası daha küçük olsun
+  const mainScaleRatio = (textScale || 100) / 100.0;
+  const subScaleRatio = (subTextScale || 80) / 100.0;
+  const letterSize = 30.0 * mainScaleRatio;         
+  const letterSizeSub = 30.0 * subScaleRatio;
+  const phoneLetterSize = 18.0 * mainScaleRatio;
   const baseH = baseHeight;        
   const isPocket = textStyle === 'engraved';
   const currentDepth = isPocket ? engraveDepth : textDepth;
   const startY = isPocket ? (baseHeight - engraveDepth) : baseHeight;
+
+  // Metalik renk algılama: bronz, altın, gümüş
+  const METALLIC_COLORS = ['#CD7F32','#B8730A','#8B5E3C','#FFD700','#FFC200','#DAA520','#C5A028','#C0C0C0','#A8A9AD','#8E9299'];
+  const getMatProps = (color) => {
+    const isMetallic = METALLIC_COLORS.includes((color || '').toUpperCase()) ||
+      METALLIC_COLORS.includes(color);
+    return isMetallic
+      ? { roughness: 0.25, metalness: 0.85 }
+      : { roughness: 0.4, metalness: 0.1 };
+  };
+  const mainMatProps = getMatProps(materialColor);
+  const subMatProps  = getMatProps(subTextColor || materialColor);
+  const effectiveSubColor = subTextColor || materialColor;
 
   const hasSubText = subText && subText.trim().length > 0;
   const hasPhoneText = phoneText && phoneText.trim().length > 0;
@@ -196,23 +430,131 @@ export const Scene3D = ({
     if (fontFamily === 'helvetiker') return "/fonts/helvetiker_bold.typeface.json";
     if (fontFamily === 'droid') return "/fonts/droid_sans_bold.typeface.json";
     if (fontFamily === 'jakarta') return "/fonts/Plus_Jakarta_Sans_Bold.json";
+    if (fontFamily === 'orbitron') return "/fonts/orbitron_bold.typeface.json";
     return "/fonts/optimer_bold.typeface.json";
   }, [fontFamily]);
 
-  // Load font synchronously for contour generation
+  // Fetch and inject custom glyphs into the JSON font data
   React.useEffect(() => {
-    const loader = new FontLoader();
-    loader.load(fontPath, (font) => {
-      setLoadedFont(font);
-    });
+    fetch(fontPath)
+      .then(res => res.json())
+      .then(data => {
+        if (data && data.glyphs) {
+          // Stilize-E (三): Sağa yatık U (⊏) + ortaya aynı boyda tire
+          // Tek konturlu tarak path: sol gövde + 3 EŞİT UZUNLUKTA yatay çubuk
+          // Font grid: ha=720, y: 0(baseline) .. 720(capHeight)
+          data.glyphs['三'] = {
+            ha: 720,
+            o: 'm 30 0 l 700 0 l 700 120 l 130 120 l 130 300 l 700 300 l 700 420 l 130 420 l 130 600 l 700 600 l 700 720 l 30 720 z'
+          };
+          // Stilize-X (※): >.< — sol > + orta nokta + sağ <
+          // Her ok: 6 noktalı chevron polygon, nokta: 8 noktalı oktagon
+          // Font grid: ha=700, orta y=360
+          data.glyphs['※'] = {
+            ha: 700,
+            // Sol >: kollar x=60'ta, sivri uç x=300 
+            // Sağ <: kollar x=640'ta, sivri uç x=400
+            // Nokta: merkez x=350, y=360, r≥44
+            o: [
+              'm 300 360 l 60 620 l 60 500 l 220 360 l 60 220 l 60 100 z',
+              'm 400 360 l 640 620 l 640 500 l 480 360 l 640 220 l 640 100 z',
+              'm 350 404 l 381 393 l 394 360 l 381 327 l 350 316 l 319 327 l 306 360 l 319 393 z'
+            ].join(' ')
+          };
+
+          const resolution = data.resolution || 1000;
+
+          // clover (🍀)
+          const cloverShape = createIconShape('clover', 100);
+          data.glyphs['🍀'] = convertShapeToGlyph(cloverShape, resolution);
+
+          // crescent (🌙)
+          const crescentShape = createIconShape('star_crescent', 100);
+          data.glyphs['🌙'] = convertShapeToGlyph(crescentShape, resolution);
+
+          // heart (♥, ❤, ❤️)
+          const heartShape = createIconShape('heart', 100);
+          const heartGlyph = convertShapeToGlyph(heartShape, resolution);
+          data.glyphs['♥'] = heartGlyph;
+          data.glyphs['❤'] = heartGlyph;
+          data.glyphs['❤️'] = heartGlyph;
+
+          // skull (💀)
+          const skullShape = createIconShape('skull', 100);
+          data.glyphs['💀'] = convertShapeToGlyph(skullShape, resolution);
+
+          // rook (♖, ♜)
+          const rookShape = createIconShape('rook', 100);
+          const rookGlyph = convertShapeToGlyph(rookShape, resolution);
+          data.glyphs['♖'] = rookGlyph;
+          data.glyphs['♜'] = rookGlyph;
+
+          // table tennis (🏓)
+          const pingPongShape = createIconShape('racket_table', 100);
+          data.glyphs['🏓'] = convertShapeToGlyph(pingPongShape, resolution);
+
+          // tennis (🎾)
+          const tennisShape = createIconShape('racket_tennis', 100);
+          data.glyphs['🎾'] = convertShapeToGlyph(tennisShape, resolution);
+
+          // star (⭐, ★, ☆)
+          const starShape = createIconShape('star', 100);
+          const starGlyph = convertShapeToGlyph(starShape, resolution);
+          data.glyphs['⭐'] = starGlyph;
+          data.glyphs['★'] = starGlyph;
+          data.glyphs['☆'] = starGlyph;
+        }
+        setFontData(data);
+      })
+      .catch(err => console.error("Error loading font data:", err));
   }, [fontPath]);
 
-  // Programatik icon shape oluştur
+  // Load and normalize custom SVG shape
+  React.useEffect(() => {
+    if (iconType === 'custom' && customSvgUrl) {
+      try {
+        const loader = new SVGLoader();
+        loader.load(
+          customSvgUrl,
+          (data) => {
+            const paths = data.paths;
+            const shapes = [];
+            for (let i = 0; i < paths.length; i++) {
+              const path = paths[i];
+              const shapesForPath = SVGLoader.createShapes(path);
+              shapes.push(...shapesForPath);
+            }
+            if (shapes.length > 0) {
+              const normalized = normalizeSvgShapes(shapes, letterSize);
+              setCustomSvgShape(normalized);
+            } else {
+              setCustomSvgShape(null);
+            }
+          },
+          null,
+          (err) => console.error("Error loading SVG:", err)
+        );
+      } catch (err) {
+        console.error("SVGLoader error:", err);
+      }
+    } else {
+      setCustomSvgShape(null);
+    }
+  }, [iconType, customSvgUrl, letterSize]);
+
+  const loadedFont = useMemo(() => {
+    if (!fontData) return null;
+    const loader = new FontLoader();
+    return loader.parse(fontData);
+  }, [fontData]);
+
+  // Programatik veya custom icon shape oluştur
   const iconScale = 0.65 * (customIconScale / 100.0); // İkon yazıdan biraz küçük
   const iconShape = useMemo(() => {
     if (iconType === 'none') return null;
+    if (iconType === 'custom') return customSvgShape;
     return createIconShape(iconType, letterSize);
-  }, [iconType, letterSize]);
+  }, [iconType, letterSize, customSvgShape]);
 
   const hasIcon = iconShape !== null;
   const iconSpacing = 2.0;
@@ -221,7 +563,6 @@ export const Scene3D = ({
   const iLoveShape = useMemo(() => isILoveMode ? createIconShape('i_love', letterSize) : null, [isILoveMode, letterSize]);
 
   // VERTICAL LAYOUT (Z-axis in 3D)
-  const lineSpacing = letterSize * 1.3;
   let currentZ = 0;
   
   let iconZ = 0;
@@ -243,9 +584,10 @@ export const Scene3D = ({
   currentZ += letterSize;
 
   if (hasSubText) {
-    currentZ += (lineSpacing - letterSize); // gap
-    textSubZ = currentZ + letterSize / 2;
-    currentZ += letterSize;
+    const gap = ((letterSize + letterSizeSub) / 2) * mainSubSpacing;
+    currentZ += gap;
+    textSubZ = currentZ + letterSizeSub / 2;
+    currentZ += letterSizeSub;
   }
 
   const totalContentDepth = currentZ;
@@ -313,11 +655,33 @@ export const Scene3D = ({
     iLoveX = textX;
   }
 
+  // Metinlerin hizalanması (textAlignment: left, right, center)
+  let textBlockStart = contentLeft;
+  if (hasIcon && iconPosition === 'left') {
+    textBlockStart = contentLeft + iconRealSize + iconSpacing;
+  }
+
+  let textX_main = textX;
+  let textX_sub = textX;
+
+  if (textAlignment === 'left') {
+    textX_main = textBlockStart + textSizeMain[0] / 2;
+    textX_sub = textBlockStart + textSizeSub[0] / 2;
+  } else if (textAlignment === 'right') {
+    const textBlockEnd = textBlockStart + textBlockWidth;
+    textX_main = textBlockEnd - textSizeMain[0] / 2;
+    textX_sub = textBlockEnd - textSizeSub[0] / 2;
+  } else {
+    // center
+    textX_main = textBlockStart + textBlockWidth / 2;
+    textX_sub = textBlockStart + textBlockWidth / 2;
+  }
+
   const baseCenterX = 0; 
   const baseCenterZ = 0; 
   const zCenterOffset = autoCenter ? 0 : textOffset;
 
-  const holeR = 3.5; 
+  const holeR = holeRadius; 
   let holeX = 0;
   let holeZ = 0;
 
@@ -345,6 +709,46 @@ export const Scene3D = ({
 
   const holeConfig = holePosition === 'none' ? null : { x: holeX, y: holeZ, r: holeR };
 
+  const safeCornerRadius = Math.min(cornerRadius, baseW / 2, baseD / 2);
+
+  // Dış halka parametreleri (isHoleExternal = true için)
+  const outerR = holeR + holeThickness; // Halka kalınlığı dinamik
+  const overlap = 2.0;       // Taban plakası ile çakışma payı
+  let loopX = 0;
+  let loopZ = 0;
+
+  const showExternalHole = isHoleExternal && holePosition !== 'none' && (selectedShape === 'rectangle' || selectedShape === 'contour');
+
+  if (showExternalHole) {
+    if (isLeft) {
+      loopX = -baseW / 2 - outerR + overlap;
+    } else if (isRight) {
+      loopX = baseW / 2 + outerR - overlap;
+    }
+
+    const straightHalf = Math.max(0, baseD / 2 - safeCornerRadius);
+    if (holePosition.includes('top')) {
+      loopZ = -straightHalf;
+    } else if (holePosition.includes('bottom')) {
+      loopZ = straightHalf;
+    } else {
+      loopZ = 0;
+    }
+  }
+
+  const loopShape = useMemo(() => {
+    if (!showExternalHole) return null;
+    
+    const shape = new THREE.Shape();
+    shape.absarc(0, 0, outerR, 0, Math.PI * 2, false);
+    const hole = new THREE.Path();
+    hole.absarc(0, 0, holeR, 0, Math.PI * 2, true);
+    shape.holes.push(hole);
+    return shape;
+  }, [showExternalHole, outerR, holeR]);
+
+  const effectiveHoleConfig = showExternalHole ? null : holeConfig;
+
   const innerScale = targetWidth ? (targetWidth / baseW) : 1;
   const scaledCenterZ = baseCenterZ * innerScale;
   const scaledBaseW = baseW * innerScale;
@@ -359,37 +763,47 @@ export const Scene3D = ({
         subText,
         hasSubText,
         letterSize,
+        letterSizeSub,
         isItalic,
         iconShape,
         iconX: iconX,
         iconScale,
-        textShiftX: textX,
+        textShiftX: textX_main,
+        subTextShiftX: textX_sub,
         mainYOffset: -textMainZ,
         subYOffset: -textSubZ,
         iconYOffset: -iconZ,
         extraShapes: isILoveMode && iLoveShape ? [
           { shape: iLoveShape, x: iLoveX, y: -iLoveZ, scale: 1.0 }
         ] : [],
-        holeConfig: holeConfig,
-        offsetRadius: 5.0 // 5mm contour padding
+        holeConfig: effectiveHoleConfig,
+        offsetRadius: 5.0, // 5mm contour padding
+        letterSpacing: textSpacing,
+        subTextSpacing: subTextSpacing
       });
     } else if (selectedShape === 'heart') {
-      return createHeartBaseShape(baseW, baseD, holeConfig);
+      return createHeartBaseShape(baseW, baseD, effectiveHoleConfig);
     } else if (selectedShape === 'teardrop') {
-      return createTeardropShape(baseW, baseD, isLeft, holeConfig);
+      return createTeardropShape(baseW, baseD, isLeft, effectiveHoleConfig);
     } else {
       return createRoundedRectShape(
         baseW, 
         baseD, 
-        Math.min(5, baseW/2, baseD/2), 
-        holeConfig
+        safeCornerRadius, 
+        effectiveHoleConfig
       );
     }
-  }, [selectedShape, baseW, baseD, isLeft, holeConfig]);
+  }, [selectedShape, baseW, baseD, isLeft, effectiveHoleConfig, safeCornerRadius, letterSizeSub, textX_main, textX_sub, textSpacing, subTextSpacing]);
+
+  // Kenarlık (Border) şekli oluşturma
+  const borderShape = useMemo(() => {
+    if (!hasBorder || !baseShape) return null;
+    return createBorderShape(baseShape, borderWidth);
+  }, [baseShape, hasBorder, borderWidth]);
 
 
 
-  const processTextGeometry = (self, setSizeFunc, yOffset) => {
+  const processTextGeometry = (self, setSizeFunc, xOffset, yOffset) => {
     if (!self.geometry.userData.morphed) {
       self.geometry.computeBoundingBox();
       let bbox = self.geometry.boundingBox;
@@ -409,7 +823,7 @@ export const Scene3D = ({
       self.geometry.rotateX(-Math.PI / 2);
       
       // Z ekseninde yerleşim
-      self.geometry.translate(textX, startY, yOffset);
+      self.geometry.translate(xOffset, startY, yOffset);
 
       self.geometry.computeVertexNormals();
       self.geometry.computeBoundingBox();
@@ -472,47 +886,49 @@ export const Scene3D = ({
       <group scale={[SCALE, SCALE, SCALE]} position={[0, -0.5, zCenterOffset * SCALE]}>
         <group ref={groupRef} scale={[innerScale, innerScale, innerScale]}>
 
-          {/* ANA METİN */}
-          {text && text.trim().length > 0 && (
+           {/* ANA METİN */}
+          {fontData && text && text.trim().length > 0 && (
             <Text3D
               name="TextMain"
-              key={`main-${text}-${currentDepth}-${textStyle}-${baseHeight}-${scaleRatio}-${hasSubText}-${isItalic}-${fontFamily}-${hasIcon}`}
-              font={fontPath}
+              key={`main-${text}-${currentDepth}-${textStyle}-${baseHeight}-${textScale}-${subTextScale}-${textAlignment}-${textSpacing}-${hasSubText}-${isItalic}-${fontFamily}-${hasIcon}`}
+              font={fontData}
               size={letterSize}
               height={currentDepth} 
+              letterSpacing={textSpacing}
               curveSegments={16}
               bevelEnabled={false}
-              onUpdate={(self) => processTextGeometry(self, setTextSizeMain, textMainZ)}
+              onUpdate={(self) => processTextGeometry(self, setTextSizeMain, textX_main, textMainZ)}
             >
               {text}
-              <meshStandardMaterial color={materialColor} roughness={0.4} metalness={0.1} />
+              <meshStandardMaterial color={materialColor} roughness={mainMatProps.roughness} metalness={mainMatProps.metalness} />
             </Text3D>
           )}
 
           {/* ALT METİN (Opsiyonel) */}
-          {hasSubText && (
+          {fontData && hasSubText && (
             <Text3D
               name="TextSub"
-              key={`sub-${subText}-${currentDepth}-${textStyle}-${baseHeight}-${scaleRatio}-${isItalic}-${fontFamily}-${hasIcon}`}
-              font={fontPath}
-              size={letterSize}
+              key={`sub-${subText}-${currentDepth}-${textStyle}-${baseHeight}-${textScale}-${subTextScale}-${textAlignment}-${subTextSpacing}-${isItalic}-${fontFamily}-${hasIcon}`}
+              font={fontData}
+              size={letterSizeSub}
               height={currentDepth} 
+              letterSpacing={subTextSpacing}
               curveSegments={16}
               bevelEnabled={false}
-              onUpdate={(self) => processTextGeometry(self, setTextSizeSub, textSubZ)}
+              onUpdate={(self) => processTextGeometry(self, setTextSizeSub, textX_sub, textSubZ)}
             >
               {subText}
-              <meshStandardMaterial color={materialColor} roughness={0.4} metalness={0.1} />
+              <meshStandardMaterial color={effectiveSubColor} roughness={subMatProps.roughness} metalness={subMatProps.metalness} />
             </Text3D>
           )}
 
           {/* ARKA YÜZ METNİ (TELEFON VB.) */}
-          {hasPhoneText && phoneDepth > 0 && (
+          {fontData && hasPhoneText && phoneDepth > 0 && (
             <group scale={[-1, 1, 1]}> {/* X ekseninde aynala ki alttan bakinca duz okunsun */}
               <Text3D
                 name="TextPhone"
                 key={`phone-${phoneText}-${phoneDepth}-${scaleRatio}-${fontFamily}`}
-                font={fontPath}
+                font={fontData}
                 size={phoneLetterSize}
                 height={phoneDepth} // Kullanicinin sectigi derinlik kadar yukari (ice) dogru
                 curveSegments={16}
@@ -520,7 +936,7 @@ export const Scene3D = ({
                 onUpdate={(self) => processPhoneGeometry(self, setTextSizePhone)}
               >
                 {phoneText}
-                <meshStandardMaterial color={materialColor} roughness={0.4} metalness={0.1} />
+                <meshStandardMaterial color={materialColor} roughness={mainMatProps.roughness} metalness={mainMatProps.metalness} />
               </Text3D>
             </group>
           )}
@@ -556,7 +972,7 @@ export const Scene3D = ({
                 {iconShape.map((shape, idx) => (
                   <mesh key={idx} name={`TextIcon_${idx}`}>
                     <extrudeGeometry args={[shape, { depth: currentDepth, bevelEnabled: false }]} />
-                    <meshStandardMaterial color={materialColor} roughness={0.4} metalness={0.1} />
+                    <meshStandardMaterial color={materialColor} roughness={mainMatProps.roughness} metalness={mainMatProps.metalness} />
                   </mesh>
                 ))}
               </group>
@@ -569,13 +985,14 @@ export const Scene3D = ({
                 scale={[iconScale, iconScale, 1]}
               >
                 <extrudeGeometry args={[iconShape, { depth: currentDepth, bevelEnabled: false }]} />
-                <meshStandardMaterial color={materialColor} roughness={0.4} metalness={0.1} />
+                <meshStandardMaterial color={materialColor} roughness={mainMatProps.roughness} metalness={mainMatProps.metalness} />
               </mesh>
             )
           )}
 
           {/* TABAN PLAKASI */}
           <mesh 
+            key={`base-${selectedShape}-${baseW}-${baseD}-${baseH}-${effectiveHoleConfig ? 'hole' : 'nohole'}-${safeCornerRadius}-${letterSizeSub}-${textX_main}-${textX_sub}`}
             name="BasePlate" 
             position={[baseCenterX, 0, baseCenterZ]} 
             rotation={[-Math.PI / 2, 0, 0]}
@@ -584,6 +1001,35 @@ export const Scene3D = ({
             <extrudeGeometry args={[baseShape, { depth: baseH, bevelEnabled: false }]} />
             <meshStandardMaterial color={baseColor || '#334155'} roughness={0.8} />
           </mesh>
+
+          {/* DIŞ DELİK HALKASI (EXTERNAL HOLE LOOP) */}
+          {showExternalHole && loopShape && (
+            <mesh 
+              key={`loop-${loopX}-${loopZ}-${outerR}-${holeR}-${holeHeight}`}
+              name="HoleLoop" 
+              position={[loopX, 0, loopZ]} 
+              rotation={[-Math.PI / 2, 0, 0]}
+              receiveShadow
+              castShadow
+            >
+              <extrudeGeometry args={[loopShape, { depth: holeHeight, bevelEnabled: false }]} />
+              <meshStandardMaterial color={baseColor || '#334155'} roughness={0.8} />
+            </mesh>
+          )}
+
+          {/* KENARLIK (BORDER) */}
+          {hasBorder && borderShape && (
+            <mesh 
+              key={`border-${selectedShape}-${baseW}-${baseD}-${baseH}-${borderWidth}-${borderDepth}`}
+              name="Border" 
+              position={[baseCenterX, 0, baseCenterZ]} 
+              rotation={[-Math.PI / 2, 0, 0]}
+              receiveShadow
+            >
+              <extrudeGeometry args={[borderShape, { depth: baseH + borderDepth, bevelEnabled: false }]} />
+              <meshStandardMaterial color={borderColor || baseColor || '#334155'} roughness={0.8} />
+            </mesh>
+          )}
 
         </group>
 

@@ -286,6 +286,7 @@ export function createTableTennisShape(size = 24) {
   return shape;
 }
 
+
 export function createILoveShape(size = 24) {
   const s = size / 2;
   const shapes = [];
@@ -325,17 +326,111 @@ export function createILoveShape(size = 24) {
   return shapes;
 }
 
+/**
+ * Stilize-E: Sağa yatık U (⊏) üzerine aynı boyda tire
+ * Sol dikey gövde + 3 EŞİT UZUNLUKTA yatay çubuk — tek konturlu tarak şekli
+ * @param {number} size
+ * @returns {THREE.Shape}
+ */
+export function createStilizeEShape(size = 24) {
+  const s = size / 2;
+
+  // Sabitler
+  const spL  = -s * 0.70;  // Sol gövde sol kenar
+  const spR  = -s * 0.33;  // Sol gövde sağ kenar (çubukların ayrıldığı nokta)
+  const barR =  s * 0.70;  // Tüm çubukların sağ ucu (EŞİT UZUNLUK)
+  const topY =  s * 0.86;  // En üst y
+  const botY = -s * 0.86;  // En alt y
+
+  // Çubuk kalınlıkları ve boşluklar (3 eşit çubuk + 2 boşluk)
+  // Toplam yükseklik 2*s*0.86 = s*1.72 → her çubuk s*0.29, boşluk s*0.27
+  const bH  = s * 0.27;   // çubuk yarı-kalınlığı
+  const bM1 =  s * 0.57;  // üst çubuk merkezi
+  const bM2 =  0;          // orta çubuk merkezi
+  const bM3 = -s * 0.57;  // alt çubuk merkezi
+
+  // Tek konturlu tarak path (CCW)
+  const shape = new THREE.Shape();
+  shape.moveTo(spL,  botY);          // ① sol gövde alt-sol
+  shape.lineTo(barR, botY);          // ② alt çubuk sağ alt
+  shape.lineTo(barR, bM3 + bH);      // ③ alt çubuk sağ üst
+  shape.lineTo(spR,  bM3 + bH);      // ④ gövdeye dön
+  shape.lineTo(spR,  bM2 - bH);      // ⑤ orta çubuk alt
+  shape.lineTo(barR, bM2 - bH);      // ⑥ orta çubuk sağ alt
+  shape.lineTo(barR, bM2 + bH);      // ⑦ orta çubuk sağ üst
+  shape.lineTo(spR,  bM2 + bH);      // ⑧ gövdeye dön
+  shape.lineTo(spR,  bM1 - bH);      // ⑨ üst çubuk alt
+  shape.lineTo(barR, bM1 - bH);      // ⑩ üst çubuk sağ alt
+  shape.lineTo(barR, topY);          // ⑪ üst çubuk sağ üst
+  shape.lineTo(spL,  topY);          // ⑫ sol gövde üst-sol
+  shape.closePath();                 // geri ①'e
+
+  return shape;
+}
+
+/**
+ * Stilize-X: >.< kompozisyonu
+ * Sol > (sivri uç sağda) + ortada daire + sağ < (sivri uç solda)
+ * @param {number} size
+ * @returns {THREE.Shape[]}
+ */
+export function createStilizeXShape(size = 24) {
+  const s = size / 2;
+  const shapes = [];
+
+  // Boyutlar
+  const armX   =  s * 0.72;  // Ok kollarının dış X (sol için -armX, sağ için +armX)
+  const armOH  =  s * 0.84;  // Kolun dış uç Y (en geniş yer)
+  const armIH  =  s * 0.52;  // Kolun iç üst/alt Y (kol kalınlığını belirler)
+  const tipX   =  s * 0.26;  // Ok ucunun merkeze uzaklığı
+  const cncX   =  s * 0.24;  // İç çentik (concave) merkeze uzaklığı
+  const dotR   =  s * 0.13;  // Orta nokta yarıçapı
+
+  // Sol ok > : sol kollar (-armX), sivri uç sağda (+tipX)
+  const left = new THREE.Shape();
+  left.moveTo( tipX,  0);           // sivri uç (sağ)
+  left.lineTo(-armX,  armOH);       // üst dış
+  left.lineTo(-armX,  armIH);       // üst iç (kol kalınlığı)
+  left.lineTo(-cncX,  0);           // iç çentik
+  left.lineTo(-armX, -armIH);       // alt iç
+  left.lineTo(-armX, -armOH);       // alt dış
+  left.closePath();
+  shapes.push(left);
+
+  // Sağ ok < : sağ kollar (+armX), sivri uç solda (-tipX)
+  const right = new THREE.Shape();
+  right.moveTo(-tipX,  0);          // sivri uç (sol)
+  right.lineTo( armX,  armOH);      // üst dış
+  right.lineTo( armX,  armIH);      // üst iç
+  right.lineTo( cncX,  0);          // iç çentik
+  right.lineTo( armX, -armIH);      // alt iç
+  right.lineTo( armX, -armOH);      // alt dış
+  right.closePath();
+  shapes.push(right);
+
+  // Ortadaki nokta
+  const dot = new THREE.Shape();
+  dot.absarc(0, 0, dotR, 0, Math.PI * 2, false);
+  shapes.push(dot);
+
+  return shapes;
+}
+
 // Simge fabrika fonksiyonu - type'a göre shape üretir
 export function createIconShape(type, size = 24) {
   switch (type) {
     case 'clover': return createCloverShape(size);
     case 'heart': return createHeartShape(size);
     case 'star_crescent': return createStarCrescentShape(size);
+    case 'star': return createStarShape(size);
     case 'skull': return createSkullShape(size);
     case 'rook': return createRookShape(size);
     case 'racket_tennis': return createTennisRacketShape(size);
     case 'racket_table': return createTableTennisShape(size);
     case 'i_love': return createILoveShape(size);
+    case 'stilize_e': return createStilizeEShape(size);
+    case 'stilize_x': return createStilizeXShape(size);
     default: return null;
   }
 }
+

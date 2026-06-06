@@ -50,13 +50,29 @@ export const handleExport = (groupRef, fileName = "SAKRAD_Anahtarlik", isMultiCo
     groupRef.current.updateMatrixWorld(true);
     zip.file(`${fileName}_TABAN.stl`, stlBuf(exporter.parse(groupRef.current, { binary: true })));
 
+    // 1.5 KENARLIK (Eğer varsa)
+    const hasBorderMesh = allChildren.some(c => c.name === 'Border');
+    if (hasBorderMesh) {
+      groupRef.current.children = allChildren.filter(c => c.name === 'Border');
+      groupRef.current.updateMatrixWorld(true);
+      zip.file(`${fileName}_KENARLIK.stl`, stlBuf(exporter.parse(groupRef.current, { binary: true })));
+    }
+
+    // 1.6 HALKA (Eğer varsa)
+    const hasHoleLoopMesh = allChildren.some(c => c.name === 'HoleLoop');
+    if (hasHoleLoopMesh) {
+      groupRef.current.children = allChildren.filter(c => c.name === 'HoleLoop');
+      groupRef.current.updateMatrixWorld(true);
+      zip.file(`${fileName}_HALKA.stl`, stlBuf(exporter.parse(groupRef.current, { binary: true })));
+    }
+
     if (heartMesh) {
       const heartParent = heartMesh.parent;
       const heartIndex = heartParent.children.indexOf(heartMesh);
 
       // 2a. YAZI — kalp mesh'ini fiziksel olarak gruptan çıkar
       heartParent.children.splice(heartIndex, 1);
-      groupRef.current.children = allChildren.filter(c => c.name && c.name !== 'BasePlate');
+      groupRef.current.children = allChildren.filter(c => c.name && c.name !== 'BasePlate' && c.name !== 'Border' && c.name !== 'HoleLoop');
       groupRef.current.updateMatrixWorld(true);
       zip.file(`${fileName}_YAZI.stl`, stlBuf(exporter.parse(groupRef.current, { binary: true })));
 
@@ -67,7 +83,7 @@ export const handleExport = (groupRef, fileName = "SAKRAD_Anahtarlik", isMultiCo
       heartParent.children.push(heartMesh);
 
       // Diğer top-level çocukları da geçici kaldır (TextMain vs.)
-      groupRef.current.children = allChildren.filter(c => c.name && c.name !== 'BasePlate');
+      groupRef.current.children = allChildren.filter(c => c.name && c.name !== 'BasePlate' && c.name !== 'Border' && c.name !== 'HoleLoop');
       // Ama sadece ILoveGroup'u tut
       const textChildren = groupRef.current.children.filter(c => c !== heartParent);
       groupRef.current.children = [heartParent];
@@ -80,7 +96,7 @@ export const handleExport = (groupRef, fileName = "SAKRAD_Anahtarlik", isMultiCo
       heartParent.children.splice(heartIndex, 0, heartMesh);
     } else {
       // Kalp yoksa 2'li export
-      groupRef.current.children = allChildren.filter(c => c.name && c.name !== 'BasePlate');
+      groupRef.current.children = allChildren.filter(c => c.name && c.name !== 'BasePlate' && c.name !== 'Border' && c.name !== 'HoleLoop');
       groupRef.current.updateMatrixWorld(true);
       zip.file(`${fileName}_YAZI.stl`, stlBuf(exporter.parse(groupRef.current, { binary: true })));
     }
@@ -110,8 +126,8 @@ export const handleExport = (groupRef, fileName = "SAKRAD_Anahtarlik", isMultiCo
         originalBaseRotation = baseMesh.rotation.clone();
         originalBaseScale = baseMesh.scale.clone();
 
-        // Collect all meshes to subtract (everything except BasePlate)
-        const subMeshes = collectMeshes(groupRef.current).filter(m => m.name !== 'BasePlate');
+        // Collect all meshes to subtract (everything except BasePlate, Border, and HoleLoop)
+        const subMeshes = collectMeshes(groupRef.current).filter(m => m.name !== 'BasePlate' && m.name !== 'Border' && m.name !== 'HoleLoop');
 
         if (subMeshes.length > 0) {
           const evaluator = new Evaluator();
@@ -181,8 +197,8 @@ export const handleExport = (groupRef, fileName = "SAKRAD_Anahtarlik", isMultiCo
           baseMesh.scale.set(1, 1, 1);
         }
 
-        // Export only the subtracted BasePlate
-        groupRef.current.children = [baseMesh];
+        // Export only the subtracted BasePlate, Border, and HoleLoop
+        groupRef.current.children = allChildren.filter(c => c.name === 'BasePlate' || c.name === 'Border' || c.name === 'HoleLoop');
         groupRef.current.updateMatrixWorld(true);
       }
 

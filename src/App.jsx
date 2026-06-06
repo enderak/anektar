@@ -30,6 +30,21 @@ const App = () => {
   const [textOffset, setTextOffset] = useState(0);
   const [autoCenter, setAutoCenter] = useState(true);
   const [baseHeight, setBaseHeight] = useState(3.0); // İnce taban (anahtarlık)
+  const [hasBorder, setHasBorder] = useState(true); // Kenarlık Ekle
+  const [borderWidth, setBorderWidth] = useState(1.2); // Kenarlık Kalınlığı
+  const [borderDepth, setBorderDepth] = useState(1.5); // Kenarlık Yüksekliği
+  const [cornerRadius, setCornerRadius] = useState(8.0); // Kenar Ovalliği (mm)
+  const [isHoleExternal, setIsHoleExternal] = useState(true); // Delik Halkası Dışarıda
+  const [holeRadius, setHoleRadius] = useState(3.5); // Delik Yarıçapı (mm)
+  const [holeThickness, setHoleThickness] = useState(2.5); // Delik Halka Kalınlığı (mm)
+  const [holeHeight, setHoleHeight] = useState(3.0); // Delik Halka Yüksekliği (mm)
+  const [subTextScale, setSubTextScale] = useState(80); // Alt Metin Boyutu (%)
+  const [textAlignment, setTextAlignment] = useState('center'); // Hizalama ('center', 'left', 'right')
+  const [textSpacing, setTextSpacing] = useState(0.0); // Ana Yazı Harf Aralığı (mm)
+  const [subTextSpacing, setSubTextSpacing] = useState(0.0); // Alt Yazı Harf Aralığı (mm)
+  const [borderColor, setBorderColor] = useState('#0F172A'); // Kenarlık Rengi
+  const [subTextColor, setSubTextColor] = useState('#22C55E'); // Alt Yazı Rengi
+  const [mainSubSpacing, setMainSubSpacing] = useState(0.3); // Ana-Alt metin arası mesafe faktörü
   const groupRef = useRef();
   const { t, i18n } = useTranslation();
 
@@ -134,6 +149,36 @@ const App = () => {
             setBaseHeight={setBaseHeight}
             targetWidth={targetWidth}
             setTargetWidth={setTargetWidth}
+            hasBorder={hasBorder}
+            setHasBorder={setHasBorder}
+            borderWidth={borderWidth}
+            setBorderWidth={setBorderWidth}
+            borderDepth={borderDepth}
+            setBorderDepth={setBorderDepth}
+            cornerRadius={cornerRadius}
+            setCornerRadius={setCornerRadius}
+            isHoleExternal={isHoleExternal}
+            setIsHoleExternal={setIsHoleExternal}
+            holeRadius={holeRadius}
+            setHoleRadius={setHoleRadius}
+            holeThickness={holeThickness}
+            setHoleThickness={setHoleThickness}
+            holeHeight={holeHeight}
+            setHoleHeight={setHoleHeight}
+            subTextScale={subTextScale}
+            setSubTextScale={setSubTextScale}
+            textAlignment={textAlignment}
+            setTextAlignment={setTextAlignment}
+            textSpacing={textSpacing}
+            setTextSpacing={setTextSpacing}
+            subTextSpacing={subTextSpacing}
+            setSubTextSpacing={setSubTextSpacing}
+            borderColor={borderColor}
+            setBorderColor={setBorderColor}
+            subTextColor={subTextColor}
+            setSubTextColor={setSubTextColor}
+            mainSubSpacing={mainSubSpacing}
+            setMainSubSpacing={setMainSubSpacing}
             onExport={(isMultiColor) => handleExport(groupRef, text, isMultiColor, textStyle, baseHeight)}
           />
 
@@ -150,71 +195,89 @@ const App = () => {
 
         </div>
 
-        {/* Right Column: 3D Canvas */}
-        <div className="flex-1 w-full flex flex-col items-center justify-start relative h-[400px] md:h-[500px] md:sticky md:top-4 md:self-start bg-white md:bg-transparent rounded-3xl overflow-hidden shadow-sm md:shadow-none mb-8 md:mb-0">
-          
-          {/* Canvas View Options Toolbar */}
-          <div className="absolute top-4 w-full px-6 flex justify-between items-center z-10 font-medium text-slate-600 text-xs pointer-events-none">
+        {/* Right Column: 3D Canvas Sticky Wrapper */}
+        <div className="flex-1 w-full md:sticky md:top-0 md:h-screen flex items-center justify-center mb-8 md:mb-0">
+          {/* 3D Canvas Container */}
+          <div className="w-full flex flex-col items-center justify-start relative h-[400px] md:h-[calc(100vh-140px)] md:min-h-[500px] md:max-h-[750px] bg-white md:bg-transparent rounded-3xl overflow-hidden shadow-sm md:shadow-none">
             
-            {/* Status Chip */}
-            <div className="flex items-center gap-2 bg-slate-50/90 backdrop-blur-sm px-3 py-1.5 rounded-full border border-slate-200 pointer-events-auto shadow-sm">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-600">{t('export_ready')}</span>
-            </div>
-
-            <div className="flex items-center gap-4 pointer-events-auto">
-              <span className="text-slate-400 tracking-wide text-[11px]">Scale:<br/>1:1</span>
-              <div className="flex gap-2 bg-slate-50/90 backdrop-blur-sm p-1 rounded-xl shadow-sm border border-slate-200">
-                <button className="p-1.5 hover:bg-slate-200 rounded-lg text-slate-600 transition-colors"><Search size={16} /></button>
-                <button className="p-1.5 hover:bg-slate-200 rounded-lg text-slate-600 transition-colors"><RefreshCcw size={16} /></button>
-                <button className="p-1.5 hover:bg-slate-200 rounded-lg text-slate-600 transition-colors"><Grid size={16} /></button>
+            {/* Canvas View Options Toolbar */}
+            <div className="absolute top-4 w-full px-6 flex justify-between items-center z-10 font-medium text-slate-600 text-xs pointer-events-none">
+              
+              {/* Status Chip */}
+              <div className="flex items-center gap-2 bg-slate-50/90 backdrop-blur-sm px-3 py-1.5 rounded-full border border-slate-200 pointer-events-auto shadow-sm">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-600">{t('export_ready')}</span>
               </div>
+
+              <div className="flex items-center gap-4 pointer-events-auto">
+                <span className="text-slate-400 tracking-wide text-[11px]">Scale:<br/>1:1</span>
+                <div className="flex gap-2 bg-slate-50/90 backdrop-blur-sm p-1 rounded-xl shadow-sm border border-slate-200">
+                  <button className="p-1.5 hover:bg-slate-200 rounded-lg text-slate-600 transition-colors"><Search size={16} /></button>
+                  <button className="p-1.5 hover:bg-slate-200 rounded-lg text-slate-600 transition-colors"><RefreshCcw size={16} /></button>
+                  <button className="p-1.5 hover:bg-slate-200 rounded-lg text-slate-600 transition-colors"><Grid size={16} /></button>
+                </div>
+              </div>
+
+            </div>
+
+            {/* The Actual Canvas */}
+            <div className="absolute inset-0 z-0">
+              <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#f8fbff] to-white/50 pointer-events-none"></div>
+              
+              <Canvas shadows dpr={[1, 2]} camera={{ position: [0, 4, 14], fov: 50 }}>
+                <Scene3D 
+                  text={text} 
+                  subText={subText}
+                  phoneText={phoneText}
+                  phoneDepth={phoneDepth}
+                  isILoveMode={isILoveMode}
+                  fontFamily={fontFamily}
+                  iconType={iconType}
+                  customSvgUrl={customSvgUrl}
+                  iconPosition={iconPosition}
+                  isItalic={isItalic}
+                  textStyle={textStyle}
+                  textDepth={textDepth}
+                  engraveDepth={engraveDepth}
+                  groupRef={groupRef}
+                  materialColor={materialColor}
+                  baseColor={baseColor}
+                  baseShape={baseShape}
+                  holePosition={holePosition}
+                  textScale={textScale}
+                  iconScale={iconScale}
+                  textOffset={textOffset}
+                  autoCenter={autoCenter}
+                  baseHeight={baseHeight}
+                  targetWidth={targetWidth}
+                  hasBorder={hasBorder}
+                  borderWidth={borderWidth}
+                  borderDepth={borderDepth}
+                  cornerRadius={cornerRadius}
+                  isHoleExternal={isHoleExternal}
+                  holeRadius={holeRadius}
+                  holeThickness={holeThickness}
+                  holeHeight={holeHeight}
+                  subTextScale={subTextScale}
+                  textAlignment={textAlignment}
+                  textSpacing={textSpacing}
+                  subTextSpacing={subTextSpacing}
+                  borderColor={borderColor}
+                  subTextColor={subTextColor}
+                  mainSubSpacing={mainSubSpacing}
+                />
+              </Canvas>
+            </div>
+
+            {/* Orbit Indicator Tool */}
+            <div className="absolute bottom-6 flex flex-col items-center gap-1 z-10 pointer-events-none text-slate-400 opacity-60">
+               <div className="w-10 h-10 rounded-full border border-dashed border-slate-400 flex items-center justify-center pointer-events-auto cursor-pointer">
+                 <span className="text-[10px] font-bold">3D</span>
+               </div>
+               <span className="text-[8px] uppercase font-bold tracking-widest">{t('orbit_mode')}</span>
             </div>
 
           </div>
-
-          {/* The Actual Canvas */}
-          <div className="absolute inset-0 z-0">
-            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#f8fbff] to-white/50 pointer-events-none"></div>
-            
-            <Canvas shadows dpr={[1, 2]} camera={{ position: [0, 4, 14], fov: 50 }}>
-              <Scene3D 
-                text={text} 
-                subText={subText}
-                phoneText={phoneText}
-                phoneDepth={phoneDepth}
-                isILoveMode={isILoveMode}
-                fontFamily={fontFamily}
-                iconType={iconType}
-                customSvgUrl={customSvgUrl}
-                iconPosition={iconPosition}
-                isItalic={isItalic}
-                textStyle={textStyle}
-                textDepth={textDepth}
-                engraveDepth={engraveDepth}
-                groupRef={groupRef}
-                materialColor={materialColor}
-                baseColor={baseColor}
-                baseShape={baseShape}
-                holePosition={holePosition}
-                textScale={textScale}
-                iconScale={iconScale}
-                textOffset={textOffset}
-                autoCenter={autoCenter}
-                baseHeight={baseHeight}
-                targetWidth={targetWidth}
-              />
-            </Canvas>
-          </div>
-
-          {/* Orbit Indicator Tool */}
-          <div className="absolute bottom-6 flex flex-col items-center gap-1 z-10 pointer-events-none text-slate-400 opacity-60">
-             <div className="w-10 h-10 rounded-full border border-dashed border-slate-400 flex items-center justify-center pointer-events-auto cursor-pointer">
-               <span className="text-[10px] font-bold">3D</span>
-             </div>
-             <span className="text-[8px] uppercase font-bold tracking-widest">{t('orbit_mode')}</span>
-          </div>
-
         </div>
       </main>
 

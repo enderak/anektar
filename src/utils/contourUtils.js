@@ -4,10 +4,10 @@ import ClipperLib from 'clipper-lib';
 /**
  * Gets scaled and transformed 2D points from text using a loaded font.
  */
-function getTextPoints(font, text, size, isItalic, shiftX, shiftY) {
+function getTextPoints(font, text, size, isItalic, shiftX, shiftY, letterSpacing = 0) {
   if (!text || text.trim().length === 0) return [];
   
-  const shapes = font.generateShapes(text, size);
+  const shapes = font.generateShapes(text, size, { letterSpacing });
   if (!shapes || shapes.length === 0) return [];
 
   let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
@@ -59,17 +59,21 @@ export function createContourBaseShape({
   subText,
   hasSubText,
   letterSize,
+  letterSizeSub, // Alt metin boyutu
   isItalic,
   iconShape,
   iconX,
   iconScale,
   textShiftX,
+  subTextShiftX, // Alt metin yatay konumu (hizalama)
   mainYOffset,
   subYOffset,
   iconYOffset, // Yeni parametre: İkon dikey konumu
   extraShapes = [], // [{ shape, x, y, scale }]
   holeConfig,
-  offsetRadius = 5.0
+  offsetRadius = 5.0,
+  letterSpacing = 0,
+  subTextSpacing = 0
 }) {
   const co = new ClipperLib.ClipperOffset();
   const c = new ClipperLib.Clipper();
@@ -81,7 +85,7 @@ export function createContourBaseShape({
   // 2D Y = -3D Z => 2D Y = mainYOffset
   
   // 1. Main Text
-  const mainTextPts = getTextPoints(font, text, letterSize, isItalic, textShiftX, mainYOffset);
+  const mainTextPts = getTextPoints(font, text, letterSize, isItalic, textShiftX, mainYOffset, letterSpacing);
   mainTextPts.forEach(pts => {
     if (ClipperLib.Clipper.Orientation(pts)) pts.reverse();
     co.AddPath(pts, ClipperLib.JoinType.jtRound, ClipperLib.EndType.etClosedPolygon);
@@ -89,7 +93,10 @@ export function createContourBaseShape({
 
   // 2. Sub Text
   if (hasSubText) {
-    const subTextPts = getTextPoints(font, subText, letterSize, isItalic, textShiftX, subYOffset);
+    const activeSubSize = letterSizeSub !== undefined ? letterSizeSub : letterSize;
+    const activeSubShiftX = subTextShiftX !== undefined ? subTextShiftX : textShiftX;
+    const activeSubSpacing = subTextSpacing !== undefined ? subTextSpacing : letterSpacing;
+    const subTextPts = getTextPoints(font, subText, activeSubSize, isItalic, activeSubShiftX, subYOffset, activeSubSpacing);
     subTextPts.forEach(pts => {
       if (ClipperLib.Clipper.Orientation(pts)) pts.reverse();
       co.AddPath(pts, ClipperLib.JoinType.jtRound, ClipperLib.EndType.etClosedPolygon);
