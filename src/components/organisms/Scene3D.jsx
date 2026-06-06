@@ -628,7 +628,7 @@ export const Scene3D = ({
   let baseD = totalContentDepth + pTop + pBottom;
 
   if (selectedShape === 'teardrop') {
-    baseW += (10.0 * scaleRatio);
+    baseW += (10.0 * mainScaleRatio);
   }
 
   // Calculate local centers
@@ -927,7 +927,7 @@ export const Scene3D = ({
             <group scale={[-1, 1, 1]}> {/* X ekseninde aynala ki alttan bakinca duz okunsun */}
               <Text3D
                 name="TextPhone"
-                key={`phone-${phoneText}-${phoneDepth}-${scaleRatio}-${fontFamily}`}
+                key={`phone-${phoneText}-${phoneDepth}-${mainScaleRatio}-${fontFamily}`}
                 font={fontData}
                 size={phoneLetterSize}
                 height={phoneDepth} // Kullanicinin sectigi derinlik kadar yukari (ice) dogru
@@ -944,7 +944,7 @@ export const Scene3D = ({
           {/* I LOVE TITLE (Extra) */}
           {isILoveMode && iLoveShape && (
             <group 
-              key={`ilove-${currentDepth}-${textStyle}-${baseHeight}-${scaleRatio}-${isItalic}-${letterSize}`}
+              key={`ilove-${currentDepth}-${textStyle}-${baseHeight}-${mainScaleRatio}-${isItalic}-${letterSize}`}
               name="ILoveGroup"
               position={[iLoveX, startY, iLoveZ]}
               rotation={[-Math.PI / 2, 0, 0]}
@@ -963,7 +963,7 @@ export const Scene3D = ({
           {hasIcon && (
             Array.isArray(iconShape) ? (
               <group
-                key={`icon-${iconType}-${currentDepth}-${textStyle}-${baseHeight}-${scaleRatio}-${isItalic}-${iconPosition}-${letterSize}`}
+                key={`icon-${iconType}-${currentDepth}-${textStyle}-${baseHeight}-${mainScaleRatio}-${isItalic}-${iconPosition}-${letterSize}`}
                 name="TextIconGroup"
                 position={[iconX, startY, iconZ]}
                 rotation={[-Math.PI / 2, 0, 0]}
@@ -978,7 +978,7 @@ export const Scene3D = ({
               </group>
             ) : (
               <mesh 
-                key={`icon-${iconType}-${currentDepth}-${textStyle}-${baseHeight}-${scaleRatio}-${isItalic}-${iconPosition}-${letterSize}`}
+                key={`icon-${iconType}-${currentDepth}-${textStyle}-${baseHeight}-${mainScaleRatio}-${isItalic}-${iconPosition}-${letterSize}`}
                 name="TextIcon"
                 position={[iconX, startY, iconZ]}
                 rotation={[-Math.PI / 2, 0, 0]}
